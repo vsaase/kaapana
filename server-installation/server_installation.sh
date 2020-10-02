@@ -483,7 +483,8 @@ where opt is:
     1.14/stable --> for Kubernetes v1.14
     1.17/stable --> for Kubernetes v1.17
     1.18/stable --> for Kubernetes v1.18
-    default: 1.18/stable
+    1.19/stable --> for Kubernetes v1.19
+    default: 1.19/stable
 
 _Argument: -os --operating-system [opt]
 where opt is:
@@ -492,7 +493,7 @@ where opt is:
     default: $OS_PRESENT"
 
 QUIET=NA
-DEFAULT_MICRO_VERSION=1.18/stable
+DEFAULT_MICRO_VERSION=1.19/stable
 HELM_VERSION=3.1/stable
 
 POSITIONAL=()

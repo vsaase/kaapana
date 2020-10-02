@@ -3,8 +3,6 @@ from airflow.utils.dates import days_ago
 from datetime import timedelta
 from airflow.models import DAG
 from datetime import datetime
-
-# from nnunet.LocalSplitLabelOperator import LocalSplitLabelOperator
 from nnunet.NnUnetOperator import NnUnetOperator
 from nnunet.GetTaskModelOperator import GetTaskModelOperator
 from kaapana.operators.DcmConverterOperator import DcmConverterOperator
@@ -12,15 +10,9 @@ from kaapana.operators.DcmWebSendOperator import DcmWebSendOperator
 from kaapana.operators.Itk2DcmSegOperator import Itk2DcmSegOperator
 from kaapana.operators.LocalGetInputDataOperator import LocalGetInputDataOperator
 from kaapana.operators.LocalWorkflowCleanerOperator import LocalWorkflowCleanerOperator
-
 import pathlib
 import json
 import os
-
-# dcmsend e230-pc02 -v 11112 -aet PUSH_TOOL -aec "CTPET" --scan-directories --scan-pattern *.dcm --recurse ./DicomExportService/
-# wget "https://zenodo.org/record/3734294/files/Task017_AbdominalOrganSegmentation.zip?download=1" -O "./Task017_AbdominalOrganSegmentation.zip"
-# mkdir -p /home/kaapana/data/workflows/models/nnUNet
-# unzip ./Task017_AbdominalOrganSegmentation.zip -d "/home/kaapana/data/workflows/models/nnUNet"
 
 tasks_json_path = os.path.join("/root/airflow/dags","nnunet","nnunet_tasks.json")
 with open(tasks_json_path) as f:
