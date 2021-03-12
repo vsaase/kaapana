@@ -1,7 +1,7 @@
-FROM nvidia/cuda:10.2-runtime-ubuntu18.04
+FROM nvidia/cuda:11.1.1-runtime-ubuntu20.04
 
 LABEL IMAGE="jupyterlab"
-LABEL VERSION="2.2.8"
+LABEL VERSION="3.0.10-vdev"
 LABEL CI_IGNORE="False"
 
 # Install Python and basic tools
@@ -17,7 +17,7 @@ RUN apt-get update -y && apt-get install -y \
     && pip3 install --upgrade pip
 
 # Install NodeJS: https://askubuntu.com/a/548776
-RUN curl -sL https://deb.nodesource.com/setup_13.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_15.x | bash - \
  && apt-get install -y nodejs
 
 # Common Python packages
@@ -36,7 +36,6 @@ RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager \
 
 # Download the default BERT model and store it in the Docker container (in the directory /root/.cache/torch/transformers). This is the easiest solution for now but makes the Docker image unnecessarily large and does not scale well
 #RUN python3 -c "FROM transformers import BertModel, BertTokenizer; BertModel.from_pretrained('bert-base-uncased'); BertTokenizer.from_pretrained('bert-base-uncased')"
-
 
 RUN mkdir -p /appdata
 COPY files/jupyterlab.sh /
