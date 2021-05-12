@@ -203,27 +203,27 @@ function change_version {
 }    
 function install_microk8s {
     
-    echo "${YELLOW}Checking /flannel/subnet.env...${NC}"
+    # echo "${YELLOW}Checking /flannel/subnet.env...${NC}"
     
-    subnet_path="/var/snap/microk8s/common/run/flannel/subnet.env"
-    if [ ! -f "$subnet_path" ]
-    then
-        echo "${YELLOW}--> Insalling subnet.env...${NC}"
-        mkdir -p /var/snap/microk8s/common/run/flannel
-        touch $subnet_path
-        set +e
-        insert_text "FLANNEL_NETWORK=10.1.0.0/16" $subnet_path
-        insert_text "FLANNEL_SUBNET=10.1.28.1/24" $subnet_path
-        insert_text "FLANNEL_MTU=1450" $subnet_path
-        insert_text "FLANNEL_IPMASQ=false" $subnet_path
-        set -e
+    # subnet_path="/var/snap/microk8s/common/run/flannel/subnet.env"
+    # if [ ! -f "$subnet_path" ]
+    # then
+    #     echo "${YELLOW}--> Insalling subnet.env...${NC}"
+    #     mkdir -p /var/snap/microk8s/common/run/flannel
+    #     touch $subnet_path
+    #     set +e
+    #     insert_text "FLANNEL_NETWORK=10.1.0.0/16" $subnet_path
+    #     insert_text "FLANNEL_SUBNET=10.1.28.1/24" $subnet_path
+    #     insert_text "FLANNEL_MTU=1450" $subnet_path
+    #     insert_text "FLANNEL_IPMASQ=false" $subnet_path
+    #     set -e
 
-        echo "${GREEN}DONE -> subnet.env:${NC}"
-        cat $subnet_path
+    #     echo "${GREEN}DONE -> subnet.env:${NC}"
+    #     cat $subnet_path
 
-    else
-        echo "${GREEN}--> subnet.env already found!.${NC}"
-    fi
+    # else
+    #     echo "${GREEN}--> subnet.env already found!.${NC}"
+    # fi
 
     
     echo "${YELLOW}Installing microk8s...${NC}"
@@ -508,7 +508,8 @@ where opt is:
     1.17/stable --> for Kubernetes v1.17
     1.18/stable --> for Kubernetes v1.18
     1.19/stable --> for Kubernetes v1.19
-    default: 1.18/stable
+    1.20/stable --> for Kubernetes v1.20
+    default: 1.20/stable
 
 _Argument: -os --operating-system [opt]
 where opt is:
@@ -517,7 +518,7 @@ where opt is:
     default: $OS_PRESENT"
 
 QUIET=NA
-DEFAULT_MICRO_VERSION=1.18/stable
+DEFAULT_MICRO_VERSION=1.20/stable
 HELM_VERSION=3.5/stable
 
 POSITIONAL=()
