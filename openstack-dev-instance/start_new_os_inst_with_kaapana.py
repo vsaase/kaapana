@@ -15,14 +15,14 @@ import ci_playbooks
 os_image = "ubuntu"
 volume_size = "90"
 instance_flavor = "dkfz-8.16"
-ssh_key = "kaapana"
-os_project_name = "E230"
-os_project_id = "1396d67192c24eb7ab606cfae1151208"
+ssh_key = None
+os_project_name = None
+os_project_id = None
 instance_name = "kaapana-ci-depl-server"
-username = "k688h"
+username = None
 password = None
-gitlab_username = "k688h"
-gitlab_password = "ESmjv7yxn5NsZgCohEkt"
+gitlab_username = None
+gitlab_password = None
 delete_instance = False
 debug_mode = False
 
