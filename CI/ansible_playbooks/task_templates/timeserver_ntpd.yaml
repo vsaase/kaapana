@@ -1,0 +1,53 @@
+# NTP timersever configuration
+---
+- name: tasks info
+  debug:
+    msg: "INSTALLING DKFZ timeserver"
+
+- name: Install ntp 
+  apt:
+    name: ['ntpdate','ntp']
+    state: present
+
+- name: copy config
+  copy:
+    src: /etc/ntp.conf
+    dest: /etc/ntp.conf.org
+
+- name: deactivate existing ntp servers
+  replace:
+    path: /etc/ntp.conf
+    regexp: 'server'
+    replace: '#server'
+    backup: yes
+
+
+- name: uncomment dkfz ntp server
+  replace:
+    path: /etc/ntp.conf
+    regexp: '#server ns'
+    replace: 'server ns'
+    backup: yes
+
+- name: Add server if not found
+  lineinfile:
+    dest: /etc/ntp.conf
+    state: present
+    regexp: '^server ns.dkfz-heidelberg.de'
+    line: 'server ns.dkfz-heidelberg.de'
+
+- name: Add server2 if not found
+  lineinfile:
+    dest: /etc/ntp.conf
+    state: present
+    regexp: '^server ns2.dkfz-heidelberg.de'
+    line: 'server ns2.dkfz-heidelberg.de'
+
+- name: stop ntp
+  command: /etc/init.d/ntp stop
+
+- name: update ntp
+  command: ntpdate ns.dkfz-heidelberg.de
+
+- name: start ntp
+  command: /etc/init.d/ntp start

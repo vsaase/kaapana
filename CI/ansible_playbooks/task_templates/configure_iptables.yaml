@@ -1,0 +1,126 @@
+
+- name: Disbale firewalld
+  service:
+    name: firewalld
+    enabled: no
+    state: stopped
+  ignore_errors: yes
+
+- name: Install `iptables` package
+  package:
+    name: "iptables"
+    state: present
+
+- name: Install `iptables-persistent` package
+  package:
+    name: "iptables-persistent"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install `iptables-services` package
+  package:
+    name: "iptables-services"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Enable Iptables
+  service:
+    name: iptables
+    enabled: yes
+    state: started
+  when: ansible_os_family == "RedHat"
+
+- name: flush all chains -F
+  shell: iptables -F
+
+- name: flush all chains -t nat -F
+  shell: iptables -t nat -F
+
+- name: flush all chains -t mangle -F
+  shell: iptables -t mangle -F
+
+- name: delete all chains
+  shell: iptables -X
+
+- name: Firewall rule - allow established connections
+  shell: iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+- name: Allow all loopback traffic
+  shell: iptables -A INPUT -i lo -j ACCEPT
+
+- name: Block null packets
+  shell: iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+
+- name: Reject syn-flood attacks
+  shell: iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
+
+- name: Block XMAS packets
+  shell: iptables -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+
+- name: Force Fragments packets check
+  shell: iptables -A INPUT -f -j DROP
+
+# - name: Firewall rule - allow port ping traffic
+#   iptables:
+#     chain: INPUT
+#     jump: ACCEPT
+#     protocol: icmp
+
+- name: Firewall rule - allow port 22/SSH traffic
+  iptables:
+    chain: INPUT
+    destination_port: "22"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow http port {{ http_port }} 
+  iptables:
+    chain: INPUT
+    destination_port: "{{ http_port | int }}"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow https port {{ https_port }} 
+  iptables:
+    chain: INPUT
+    destination_port: "{{ https_port | int }}"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow dicom port {{ dicom_port }}
+  iptables:
+    chain: INPUT
+    destination_port: "{{ dicom_port | int }}"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow kube-api port 6443
+  iptables:
+    chain: INPUT
+    destination_port: "6443"
+    jump: ACCEPT
+    protocol: tcp
+
+
+- name: Firewall rule - drop any traffic without rule
+  iptables:
+    chain: INPUT
+    jump: DROP
+
+- name: Save configuration RedHat
+  shell: /usr/libexec/iptables/iptables.init save
+  # shell: iptables-save > /etc/sysconfig/iptables
+  ignore_errors: no
+  when: ansible_os_family == "RedHat"
+
+- name: Save configuration Debian
+  shell: iptables-save > /etc/iptables/rules.v4
+  ignore_errors: no
+  when: ansible_os_family == "Debian"
+
+
+- name: Restart service iptables
+  service:
+    name: iptables
+    state: restarted
+  when: ansible_os_family == "RedHat"

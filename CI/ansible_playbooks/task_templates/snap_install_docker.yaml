@@ -1,0 +1,86 @@
+---
+- name: tasks info
+  debug:
+    msg: "INSTALL DOCKER"
+
+- name: Install Docker
+  become: yes
+  snap:
+      name:
+      - docker
+
+- name: Set Docker DKFZ HTTP_PROXY
+  become: yes
+  lineinfile:
+      dest: /etc/systemd/system/snap.docker.dockerd.service
+      regexp: '^Environment="HTTP_PROXY'
+      line: 'Environment="HTTP_PROXY={{ http_proxy }}"'
+      insertafter: '^[Service]'
+      state: present
+  register: proxyinstalled
+
+- name: Set Docker DKFZ DNS
+  become: yes
+  lineinfile:
+      dest: /var/snap/docker/current/config/daemon.json
+      regexp: '^dns'
+      line: '    "dns": ["192.55.188.177","192.55.188.199"],'
+      insertafter: '"error",'
+      state: present
+
+
+- name: Start docker
+  become: yes
+  command: snap restart docker
+  ignore_errors: no
+  when: proxyinstalled.changed
+
+- name: install python requirements
+  become: yes
+  pip:
+      name: ['docker','docker-compose']
+      state: present
+
+- name: groupadd
+  command: groupadd docker
+  become: yes
+  ignore_errors: yes
+
+- name: usernmod
+  command: usermod -aG docker ubuntu
+  become: yes
+  ignore_errors: yes
+
+# - name: Log into private registry and force re-authorization
+#   become: yes
+#   docker_login:
+#     registry: dktk-jip-registry.dkfz.de
+#     username: "{{ username }}"
+#     password: "{{ password }}"
+#     config_path: "{{ ansible_env.HOME }}/snap/docker/current/.docker/config.json"
+#     reauthorize: yes
+
+# - name: Recursively change ownership of a directory
+#   become: yes
+#   file:
+#     path: "{{ ansible_env.HOME }}/snap"
+#     state: directory
+#     owner: ubuntu
+#     group: ubuntu
+#     recurse: yes
+
+- name: Reboot machine...
+  become: yes
+  reboot:
+      reboot_timeout: 120
+  when: proxyinstalled.changed
+
+- name: Docker login
+  command: "/snap/bin/docker login dktk-jip-registry.dkfz.de -u {{ ci_username }} -p {{ ci_password }}"
+  become: no
+  ignore_errors: no
+
+- name: Docker login
+  command: "/snap/bin/docker login dktk-jip-registry.dkfz.de -u {{ ci_username }} -p {{ ci_password }}"
+  become: yes
+  ignore_errors: no

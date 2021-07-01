@@ -1,0 +1,53 @@
+# basic installation tests
+- name: Running basic platform tests
+  block:
+  - name: "TEST: Check how many pods are deployed"
+    shell: '/bin/bash -i -c "kubectl get pod --all-namespaces"'
+    register: platform_installed
+    retries: 4
+    delay: 5
+    become: no
+    until: platform_installed.stdout_lines | count >= 20
+
+  - name: "TEST: Wait until everything is running"
+    shell: /bin/bash -i -c "kubectl get pod --all-namespaces | grep -v -E --line-buffered 'Completed|Running'"
+    register: services_not_running
+    retries: 200
+    delay: 5
+    become: no
+    until: services_not_running.stdout_lines | count == 1
+
+  - name: "TEST: Check if dicom_port is open"
+    wait_for:
+      timeout: 30
+      port: "{{ dicom_port }}"
+    # when: close_dicom_port is undefined or close_dicom_port != 'true' 
+
+  - name: "TEST: Check if http_port is open"
+    wait_for:
+      timeout: 30
+      port: "{{ http_port }}"
+
+  - name: "TEST: Check if https_port is open"
+    wait_for:
+      timeout: 30
+      port: "{{ https_port }}"
+
+  # - name: Check if kube-api-port is open
+  #   wait_for:
+  #     timeout: 30
+  #     port: "6443"
+  
+  rescue:
+    - name: Get all not running pods
+      shell: /bin/bash -i -c "kubectl get pod --all-namespaces | grep -v -E --line-buffered 'Completed|Running'"
+      register: services_not_running
+
+    - name: 'Loop: Get pod log'
+      shell: /bin/bash -i -c "kubectl logs -n {{ (item.split(' ')| unique)[0] }} {{ (item.split(' ')| unique)[2] }} --all-containers=true"
+      ignore_errors: yes
+      loop: "{{ services_not_running.stdout_lines[1:] }}"
+
+    - fail:
+        msg: "Basic platform tests failed!"
+        

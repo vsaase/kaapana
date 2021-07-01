@@ -1,0 +1,43 @@
+# NTP timersever configuration
+---
+- name: tasks info
+  debug:
+    msg: "INSTALLING DKFZ timeserver"
+
+- name: backup config
+  become: yes
+  copy:
+    src: /etc/systemd/timesyncd.conf
+    dest: /etc/systemd/timesyncd.conf.bak
+
+- name: activate main ntp server
+  become: yes
+  replace:
+    path: /etc/systemd/timesyncd.conf
+    regexp: '#NTP='
+    replace: 'NTP=ns.dkfz-heidelberg.de'
+    backup: yes
+
+- name: activate FallbackNTP
+  become: yes
+  replace:
+    path: /etc/systemd/timesyncd.conf
+    regexp: '#FallbackNTP=ntp.ubuntu.com'
+    replace: 'FallbackNTP=ns2.dkfz-heidelberg.de'
+    backup: yes
+
+- name: Turn on NTP
+  become: yes
+  command: timedatectl set-ntp true
+
+- name: Set timezone Europe/Berlin
+  become: yes
+  command: timedatectl set-timezone Europe/Berlin
+
+- name: restart systemd-timesyncd service
+  become: yes
+  systemd:
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+    name: systemd-timesyncd

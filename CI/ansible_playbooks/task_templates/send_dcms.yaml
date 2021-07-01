@@ -1,0 +1,64 @@
+---
+- fail: msg="'dicom_demo_data' not set!"
+  when: dicom_demo_data is undefined or dicom_demo_data == ""
+
+- debug: 
+    msg: "Send example dicom images from {{ dicom_demo_data }}"
+
+- name: Check if dcmsend is available
+  shell: command -v dcmsend >/dev/null 2>&1
+  ignore_errors: yes
+  register: dcmsend_available
+  delegate_to: localhost
+
+- name: Check if storescu is available
+  shell: command -v storescu >/dev/null 2>&1
+  ignore_errors: yes
+  register: storescu_available
+  delegate_to: localhost
+  when: dcmsend_available.rc != 0
+
+- name: Error if both not available
+  fail: msg="dcmsend and storescu not available!"
+  when: dcmsend_available.rc != 0 and storescu_available.rc !=0
+
+- name: Set executable to dcmsend
+  set_fact:
+    executable: "dcmsend"
+  when: dcmsend_available.rc == 0
+
+- name: Set executable to storescu
+  set_fact:
+    executable: "storescu"
+  when: dcmsend_available.rc != 0 and storescu_available.rc == 0
+
+- name: Check if dicom port available
+  block:
+    - name: Check if dicom_port is open
+      wait_for:
+        timeout: 30
+        port: "{{ dicom_port }}"
+
+  rescue:
+    - debug:
+        msg: 'Dicom port closed! -> opening'
+
+    # - name: set port_mode
+    #   set_fact:
+    #     port_mode: "open" 
+    # - import_tasks: helpers/oc_port.yaml
+
+    - name: Check again if dicom_port is open
+      wait_for:
+        timeout: 30
+        port: "{{ dicom_port }}"
+    
+- name: Send example dicom images storescu
+  command: storescu {{ inventory_hostname }} {{ dicom_port }} +r +sd +sp *.dcm -aet PUSH_TOOL -aec TCIA-example {{ dicom_demo_data }}
+  delegate_to: localhost
+  when: executable == "storescu"
+
+- name: Send example dicom images dcmsend
+  command: dcmsend -v {{ inventory_hostname }} {{ dicom_port }} -aet PUSH_TOOL -aec TCIA-example --scan-directories --scan-pattern *.dcm --recurse "{{ dicom_demo_data }}"
+  delegate_to: localhost
+  when: executable == "dcmsend"

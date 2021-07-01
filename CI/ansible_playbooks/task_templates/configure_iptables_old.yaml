@@ -1,0 +1,85 @@
+
+- name: Install `iptables` package
+  package:
+    name: "iptables"
+    state: present
+
+- name: Flush existing firewall rules
+  iptables:
+    flush: true
+
+- name: Firewall rule - allow all loopback traffic
+  iptables:
+    action: append
+    chain: INPUT
+    in_interface: lo
+    jump: ACCEPT
+
+- name: Firewall rule - allow established connections
+  iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+
+# - name: Firewall rule - allow port ping traffic
+#   iptables:
+#     chain: INPUT
+#     jump: ACCEPT
+#     protocol: icmp
+
+- name: Firewall rule - allow port 22/SSH traffic
+  iptables:
+    chain: INPUT
+    destination_port: "22"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow http port {{ http_port }} 
+  iptables:
+    chain: INPUT
+    destination_port: "{{ http_port | int }}"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow https port {{ https_port }} 
+  iptables:
+    chain: INPUT
+    destination_port: "{{ https_port | int }}"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow dicom port {{ dicom_port }}
+  iptables:
+    chain: INPUT
+    destination_port: "{{ dicom_port | int }}"
+    jump: ACCEPT
+    protocol: tcp
+
+- name: Firewall rule - allow kube-api port 6443
+  iptables:
+    chain: INPUT
+    destination_port: "6443"
+    jump: ACCEPT
+    protocol: tcp
+
+
+- name: Firewall rule - drop any traffic without rule
+  iptables:
+    chain: INPUT
+    jump: DROP
+
+
+- name: Save configuration RedHat
+  shell: iptables-save > /etc/sysconfig/iptables
+  ignore_errors: no
+  when: ansible_os_family == "RedHat"
+
+- name: Save configuration Debian
+  shell: iptables-save > /etc/iptables/rules.v4
+  ignore_errors: no
+  when: ansible_os_family == "Debian"
+
+- name: Restart service iptables
+  service:
+    name: iptables
+    state: restarted

@@ -1,0 +1,26 @@
+---
+# Instance Configuration
+gpu_support: "false"
+release_version: "1.1.5-vdev"
+
+# Project Configuration
+project_name: "joint-imaging-platform"
+chart_repo: "kaapana"
+
+neeed_repos:
+  - "kaapana"
+  - "kaapana-public"
+  - "processing-internal"
+  - "processing-external"
+
+fast_data_dir: "/home/kaapana"
+slow_data_dir: "/home/kaapana/dicom"
+http_port: 80
+https_port: 443
+dicom_port: 11112
+min_gb_left: 80
+pull_policy_pods: "Always"
+pull_policy_jobs: "Always"
+pull_policy_operators: "Always"
+dev_mode: true
+dev_ports: false

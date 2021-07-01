@@ -1,0 +1,17 @@
+[Unit]
+Description=CI server Service
+After=multi-user.target
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+Environment="CI_USERNAME={{ ci_username }}"
+Environment="CI_PASSWORD={{ ci_password }}"
+Environment="http_proxy={{ http_proxy }}"
+ExecStart=/usr/bin/python3 ci_http_trigger_server.py
+WorkingDirectory=/home/ubuntu/kaapana/CI/scripts
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,67 @@
+---
+- name: port_mode check
+  fail: msg="'port_mode' not specified (open | close)"
+  when: port_mode is undefined or port_mode == ""
+
+- name: port check
+  fail: msg="'port' not specified "
+  when: port is undefined or port == ""
+
+- name: Install `iptables` package
+  package:
+    name: "iptables"
+    state: present
+
+- name: Firewall rule - open port {{ port }} 
+  iptables:
+    chain: INPUT
+    destination_port: "{{ port | int }}"
+    jump: ACCEPT
+    state: present
+    protocol: tcp
+  register: config_changed
+  when: port_mode == 'open'
+
+
+- name: Firewall rule - open port {{ port }} 
+  iptables:
+    chain: INPUT
+    destination_port: "{{ port | int }}"
+    jump: ACCEPT
+    state: absent
+    protocol: tcp
+  register: config_changed
+  when: port_mode == 'close'
+
+- name: Save configuration RedHat
+  shell: iptables-save > /etc/sysconfig/iptables
+  ignore_errors: no
+  when: ansible_os_family == "RedHat"
+
+- name: Save configuration Debian
+  shell: iptables-save > /etc/iptables/rules.v4
+  ignore_errors: no
+  when: ansible_os_family == "Debian"
+
+- name: Restart service iptables
+  service:
+    name: iptables
+    state: restarted
+
+# - name: Reboot machine...
+#   reboot:
+#     reboot_timeout: 3600
+#   when: config_changed.changed
+
+- name: Check again if port is closed
+  wait_for:
+    timeout: 100
+    port: "{{ port | int }}"
+    state: stopped 
+  when: port_mode == 'close' 
+
+- name: Check again if port is open
+  wait_for:
+    timeout: 100
+    port: "{{ port | int }}"
+  when: port_mode == 'open' 

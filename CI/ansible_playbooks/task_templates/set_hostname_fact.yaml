@@ -1,0 +1,13 @@
+- name: get hostname
+  command: hostname
+  register: hostname_host
+
+- name: "set system_hostname to {{ hostname_host.stdout }}"
+  set_fact:
+    system_hostname: "{{ hostname_host.stdout }}"
+  when: "'.de' in hostname_host.stdout"
+
+- name: "set system_hostname to {{ ansible_ssh_host }}"
+  set_fact:
+    system_hostname: "{{ ansible_ssh_host }}"
+  when: "'.de' not in hostname_host.stdout"

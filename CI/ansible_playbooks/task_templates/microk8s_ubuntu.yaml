@@ -1,0 +1,46 @@
+---
+- name: Install Ubuntu Dependencies
+  debug:
+    msg: "Microk8s Ubuntu Packages"
+
+- name: install proxy Ubuntu
+  import_tasks: task_templates/proxy_ubuntu.yaml
+  when: http_proxy is defined and http_proxy != 'None'
+
+- name: Wait for automatic system updates
+  become: true
+  shell: while sudo fuser /var/lib/dpkg/{{ item }} >/dev/null 2>&1; do sleep 1; done;
+  with_items:
+    - lock
+    - lock-frontend
+
+- name: Upgrade system
+  become: yes
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install required system packages
+  become: yes
+  apt: name={{ item }} state=latest update_cache=yes
+  loop:
+    [
+      "curl",
+      "jq",
+      "python3",
+      "python3-pip",
+      "python3-setuptools",
+      "snapd",
+    ]
+
+- name: Creates directory /var/snap/microk8s/common/run/flannel
+  file:
+    path: /var/snap/microk8s/common/run/flannel
+    state: directory
+
+- name: Set subnet.env
+  become: no
+  template:
+    src: file_templates/subnet.env
+    dest: "/var/snap/microk8s/common/run/flannel/subnet.env"
+    force: no

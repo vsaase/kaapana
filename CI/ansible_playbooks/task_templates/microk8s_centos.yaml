@@ -1,0 +1,94 @@
+---
+- name: Install CentOS Dependencies
+  debug:
+    msg: "Microk8s CentOs Packages"
+
+- name: install proxy CentOs
+  import_tasks: task_templates/proxy_centos.yaml
+  when: http_proxy is defined and http_proxy != 'None'
+
+- name: Check if Snap is installed
+  shell: 'command -v snap >/dev/null 2>&1'
+  ignore_errors: yes
+  register: snap_installed
+
+- name: upgrade all packages
+  become: yes
+  yum:
+    update_cache: yes
+    name: '*'
+    state: latest
+  when: snap_installed.rc != 0
+
+- name: Install packages
+  become: yes
+  yum:
+    name:
+      - jq
+      - nano
+      - snapd
+    state: present
+  when: snap_installed.rc != 0
+
+- name: Enable snap
+  become: yes
+  command: systemctl enable --now snapd.socket
+
+- name: Set link
+  become: yes
+  command: ln -sf /var/lib/snapd/snap /snap
+
+- name: Creates directory /var/snap/microk8s/common/run/flannel
+  file:
+    path: /var/snap/microk8s/common/run/flannel
+    state: directory
+
+- name: Set subnet.env
+  become: no
+  template:
+    src: file_templates/subnet.env
+    dest: "/var/snap/microk8s/common/run/flannel/subnet.env"
+    force: no
+
+- name: Enable snap
+  become: yes
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: crond
+  
+- name: check set_path present
+  stat: 
+    path: "/etc/profile.d/set_path.sh"
+  register: set_path_file
+
+- name: Set_path
+  become: yes
+  copy:
+    content: "PATH=$PATH:/snap/bin"
+    dest: "/etc/profile.d/set_path.sh"
+    mode: +x
+  when: not set_path_file.stat.exists
+
+# - name: Source /etc/profile.d/set_path.sh
+#   become: yes
+#   command: "source /etc/profile.d/set_path.sh"
+#   when: not set_path_file.stat.exists
+
+- name: Add snap path to /etc/sudoers
+  become: yes
+  replace:
+    path: "/etc/sudoers"
+    regexp: ":/usr/bin"
+    replace: ":/usr/bin:/usr/local/bin:/snap/bin"
+  when: not set_path_file.stat.exists
+
+- name: Set Snap http_proxy
+  become: yes
+  command: "snap set system proxy.http={{ http_proxy }}"
+  when: http_proxy is defined and http_proxy != 'None'
+
+- name: Set Snap https_proxy
+  become: yes
+  command: "snap set system proxy.https={{ http_proxy }}"
+  when: http_proxy is defined and http_proxy != 'None'

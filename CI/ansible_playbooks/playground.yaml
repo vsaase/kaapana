@@ -1,0 +1,25 @@
+---
+- name: Change hostname trial
+  hosts: localhost
+  gather_facts: false
+  tasks:  
+
+    - name: Set some facts straight
+      set_fact:
+        ip_addrr: "10.128.130.139"
+        hstnam_tmp: "vm-xxx-yyy.cloud.dkfz-heidelberg.de"
+    - name: Extract part of IP addr
+      set_fact:
+        ip_addr: "{{ ip_addrr | regex_search('(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})', '\\3', '\\4') }}"
+    - name: Prepare new hostname
+      set_fact:
+        new_hostname: "{{ hstnam_tmp | replace('xxx-yyy', ip_addr[0]+'-'+ip_addr[1]) }}"
+    - name: Print new hostname
+      debug: msg="{{ new_hostname }}"
+    # - debug: msg="{{ inventory_hostname }}"
+
+    - name: Change target hostname
+      hosts: "10.128.130.139"
+    #   strategy: free
+      remote_user: root
+      shell: hostnamectl set-hostname {{ new_hostname }}

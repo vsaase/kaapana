@@ -1,0 +1,5 @@
+{{ ansible_managed | comment }}
+IdentityFile ~/.ssh/kaapana.pem
+
+Host phabricator.mitk.org
+    IdentityFile ~/.ssh/jip-ci-kaapana.pem

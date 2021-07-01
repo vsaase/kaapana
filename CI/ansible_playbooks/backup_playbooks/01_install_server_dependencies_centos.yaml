@@ -1,0 +1,97 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_prompt:
+  - name: target_host
+    prompt: please enter the target host IP
+    default: "10.128.129.79"
+    private: no
+
+  tasks:
+    - add_host:
+        name: "{{ target_host }}"
+        groups: os_server
+      register: check_hosts
+
+- name: Install kaapana server dependencies
+  hosts: "os_server"
+  remote_user: root
+  strategy: free
+  become: no
+  # vars_prompt:
+  # - name: ansible_ssh_private_key_file
+  #   prompt: please specify the ssh-key
+  #   default: "~/.ssh/kaapana.pem"
+  #   private: no
+
+  vars:
+    server_script: "../../installation/server_installation.sh"
+    KAAPANA_HOME: "../../"
+    doc_install_test: "false"
+
+  tasks:
+  - name: Check if kubectl is installed
+    shell: 'command -v kubectl >/dev/null 2>&1'
+    ignore_errors: yes
+    register: kubectl_installed
+
+  - name: Docs install test
+    block:
+    - name: Download install script from docs server
+      get_url:
+        url: https://jip.dktk.dkfz.de/42fef1/server_installation.sh
+        dest: "{{ lookup('env','HOME') }}/server_installation.sh"
+      delegate_to: 127.0.0.1
+
+    - set_fact:
+        server_script: "{{ lookup('env','HOME') }}/server_installation.sh"
+      
+    when: 
+      - doc_install_test |bool
+      - kubectl_installed.rc != 0
+
+
+  - name: install server
+    block:
+    - name: Install Server  1st Part
+      script: "{{ server_script }} --mode install --quiet -nac --quiet"
+      ignore_errors: yes
+      register: part_1
+
+    - name: Install Script part 1 fail check
+      fail: msg="Install script part 1 failed."
+      when: part_1.rc != 0 and part_1.rc != 3 
+
+    - name: Reboot machine...
+      reboot:
+        reboot_timeout: 180
+      when: part_1.rc == 3
+      
+    - name: Install Server  2nd Part
+      script: "{{ server_script }} --mode install --quiet -nac --quiet"
+      when: part_1.rc == 3
+
+    when: kubectl_installed.rc != 0
+
+  - name: Check if Kubectl is working...
+    command: '/bin/bash -i -c "kubectl get pods --all-namespaces"'
+    retries: 10
+    delay: 5
+    register: result
+    until: result.rc == 0
+
+  - name: Check if Helm is working...
+    command: '/bin/bash -i -c "helm ls"'
+    retries: 10
+    delay: 5
+    register: result
+    until: result.rc == 0
+
+  - name: RESULT
+    debug:
+      msg: "SERVER DEPENDENCIES INSTALLED SUCCESSFULLY"
+  
+  - name: RETURN
+    debug:
+      msg: "OK"
+...

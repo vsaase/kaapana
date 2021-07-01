@@ -1,0 +1,68 @@
+---
+- name: delete a compute instance
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: username
+      default: "jip-ci-kaapana"
+      private: no
+      prompt: "OpenStack username?"
+
+    - name: password
+      prompt: "OpenStack password?"
+      default: ""
+      private: yes
+
+    - name: instance_name
+      prompt: "OpenStack instance name?"
+      default: "kaapana-instance"
+      private: no
+
+  vars:
+    project_name: E230-DKTK-JIP
+  environment:
+    OS_IDENTITY_API_VERSION: 2
+    OS_ENDPOINT_TYPE: publicURL
+  tasks:
+    - name: Set E230-DKTK-JIP os_project_id
+      set_fact:
+        os_project_id: 969831bf53424f1fb318a9c1d98e1941
+      when: project_name == "E230-DKTK-JIP"
+
+    - name: Set E230-KAAPANA-CI os_project_id
+      set_fact:
+        os_project_id: 4a42bd361cbe4ccb851ee857abaa3589
+      when: project_name == "E230-KAAPANA-CI"
+
+    - name: Set E130-OP41 os_project_id
+      set_fact:
+        os_project_id: 37512a3a49fc4ccbb811a518b501997a
+      when: project_name == "E130-OP41"
+      
+    - name: Get password from env...
+      set_fact:
+        password: "{{ lookup('env','CI_PASSWORD') or password }}"
+      when: username == "jip-ci-kaapana" and password | length == 0
+    
+    - name: delete an instance
+      environment: 
+        OS_TENANT_ID: "{{ os_project_id }}"
+      os_server:
+        state: absent
+        auth:
+          auth_url: "https://cloud.dkfz-heidelberg.de:13000"
+          username: "{{ username }}"
+          password: "{{ password }}"
+          user_domain_name: "AD"
+          project_name: "{{ project_name }}"
+        name: "{{ instance_name }}"
+        timeout: 120
+      register: del_instance
+
+    - name: RESULT
+      debug:
+        msg: "INSTANCE DELETED SUCCESSFULLY"
+    
+    - name: RETURN
+      debug:
+        msg: "OK"

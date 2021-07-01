@@ -1,0 +1,47 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_prompt:
+    - name: target_host
+      prompt: please enter the target host IP
+      default: "10.128.129.79"
+      private: no
+
+  tasks:
+    - add_host:
+        name: "{{ target_host }}"
+        groups: os_server
+
+- name: Purge filesystem 
+  hosts: os_server
+  strategy: free
+  remote_user: root
+  vars_prompt:
+    - name: "project_config"
+      prompt: "Which project configuration should be used?"
+      default: "project_config_jip.yaml"
+      private: no
+
+  vars:
+    KAAPANA_HOME: "../../"
+  vars_files:
+  - "{{ KAAPANA_HOME }}/CI/ansible_playbooks/project_configs/{{ project_config }}"
+
+  tasks:
+  - name: Delete service files
+    file:
+      path: "{{ fast_data_dir }}"
+      state: absent
+
+  - name: Delete dicom files
+    file:
+      path: "{{ slow_data_dir }}"
+      state: absent
+
+  - name: RESULT
+    debug:
+      msg: "PURGED FILESYSTEM SUCCESSFULLY"
+  
+  - name: RETURN
+    debug:
+      msg: "OK"

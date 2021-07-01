@@ -1,0 +1,55 @@
+- name: Initial server tests...
+  debug:
+    msg: "Initial server tests..."
+
+# - set_fact:
+#     mount: "{{ ansible_mounts | first }}"
+
+# - set_fact: disk_usage="{{ mount.size_total - mount.size_available }}"
+# - set_fact: disk_usage_ratio="{{ disk_usage|float / mount.size_total }}"
+# - set_fact: disk_usage_s="{{ (disk_usage|float / 1000000000) | round(1, 'common') }}"
+# - set_fact: disk_total_s="{{ (mount.size_total / 1000000000) | round(1, 'common') }}"
+# - set_fact: disk_usage_ratio_s="{{ 100 * (disk_usage_ratio|float) | round(1, 'common') }}%"
+
+# - debug:
+#     msg: "disk usage {{ disk_usage_s }} GB of total {{ disk_total_s }} GB ({{ disk_usage_ratio_s }})"
+
+# - debug:
+#     msg: "Mounts ({{ ansible_mounts }})"
+# - debug:
+#     msg: "Mounts ({{ ansible_mounts | first  }})"
+# - debug:
+#     msg: "Mounts ({{ ansible_mounts | second  }})"
+
+# - name:
+#   assert:
+#     that: (disk_total_s|float  > min_gb_left|float)
+#     fail_msg:
+#       - "Your disk space is too small to install the system."
+#       - "found: {{ disk_total_s }} GB -> limit min {{ min_gb_left }} GB"
+#     success_msg: "Disk space ok."
+#   tags: disk
+#   any_errors_fatal: true
+
+# - name: Source .bashrc
+#   command: source ~/.bashrc
+#   become_user: ubuntu
+#   ignore_errors: no
+
+- name: Check if kubectl is installed
+  shell: '/bin/bash -i -c "command -v kubectl >/dev/null 2>&1"'
+  ignore_errors: no
+  become: no
+
+- name: Check if kubectl is working
+  command: '/bin/bash -i -c "kubectl get pods --all-namespaces"'
+  retries: 20
+  delay: 2
+  register: result
+  until: result.rc == 0
+
+- name: Check if Helm is installed
+  shell: command -v helm >/dev/null 2>&1
+  register: helm_installed
+  ignore_errors: no
+  become: no

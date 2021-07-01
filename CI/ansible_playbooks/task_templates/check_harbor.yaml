@@ -1,0 +1,42 @@
+- name: 'Checking registry access...'
+  block:
+    - name: "Check registry credentials..."
+      debug:
+        msg: "Check registry credentials..."
+    
+    - name: check credentials are available
+      fail: msg="Credentials are not defined!"
+      when: registry_username is undefined or registry_username == "" or registry_password is undefined or registry_password == ""
+      
+    - name: Get available registry projects
+      uri:                                        
+        url: "https://dktk-jip-registry.dkfz.de/api/v2.0/projects"    
+        method: GET                               
+        user: "{{ registry_username }}"            
+        password: "{{ registry_password }}"    
+        force_basic_auth: yes                    
+        return_content: yes
+        status_code: 200
+      register: registry_projects            
+      ignore_errors: no
+
+    - name: Credentials valid
+      fail: msg="Credentials not valid!"
+      when: registry_projects.json | length == 1
+
+- name: 'Loop: Check project access'
+  fail: 
+    msg: 
+    - "No access for project {{ item }}"
+    - "Please contact the kaapana team from DKFZ to grant access!"
+  when: item not in registry_projects.content
+  loop: "{{ neeed_repos }}"
+
+- name: 'Loop: Add Helm repos needed'
+  command: helm repo add --username {{ registry_username }} --password {{ registry_password }} {{ item }} https://dktk-jip-registry.dkfz.de/chartrepo/{{ item }}
+  loop: "{{ neeed_repos }}"
+  no_log: True
+  become: no
+
+
+

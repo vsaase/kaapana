@@ -1,0 +1,350 @@
+---
+- name: launch a compute instance
+  hosts: localhost
+  gather_facts: false
+  environment:
+    OS_IDENTITY_API_VERSION: 2
+    OS_ENDPOINT_TYPE: publicURL
+    OS_TENANT_ID: 4a42bd361cbe4ccb851ee857abaa3589
+  vars_prompt:
+    - name: ci_password
+      prompt: "What is the jip-ci-kaapana password?"
+      private: yes
+
+  vars:
+    - instance_name: ci_server_test
+    - instance_flavor: dkfz-8.16
+    - os_image: Ubuntu-20.04-LTS-DKFZ
+    - volume_size: 200
+    - key_name: kaapana
+  tasks:
+  - name: Get password from env...
+    set_fact:
+      ci_password: "{{ lookup('env','CI_PASSWORD') or ci_password }}"
+    when: ci_password | length == 0
+
+  - name: launch an instance
+    os_server:
+      state: present
+      auth:
+        auth_url: "https://cloud.dkfz-heidelberg.de:13000"
+        username: "kaapana-ci"
+        password: "{{ ci_password }}"
+        user_domain_name: "AD"
+        project_name: "E230-KAAPANA-CI"
+      name: "{{ instance_name }}"
+      key_name: "{{ key_name }}"
+      image: "{{ os_image }}"
+      volume_size: "{{ volume_size }}"
+      flavor: "{{ instance_flavor }}"
+      region_name: regionOne
+      terminate_volume: True
+      boot_from_volume: True
+      security_groups: default
+      auto_ip: yes
+      wait: yes
+      timeout: 120
+      meta:
+        hostname: ci_server.localdomain
+    register: ci_server
+
+  - debug:
+      msg: "{{ ci_server.openstack.accessIPv4 }}"
+
+  - name: Wait for SSH on the Instance
+    command: ssh-keygen -R {{ ci_server.openstack.accessIPv4 }}
+
+  - name: Wait for SSH on the Instance
+    command: ssh -oBatchMode=yes -oStrictHostKeyChecking=no -i ~/.ssh/jip-ci-kaapana.pem ubuntu@{{ ci_server.openstack.accessIPv4 }} true
+    register: result
+    until: result.rc == 0
+    retries: 30
+    delay: 10
+
+  - name: Add Ubuntu Instance to Inventory
+    add_host: name=ci_server
+      groups=ci_servers
+      ansible_ssh_host={{ ci_server.openstack.accessIPv4 }}
+
+- hosts: ci_servers
+  remote_user: ubuntu
+  become: no
+  environment:
+    http_proxy: http://www-int2.inet.dkfz-heidelberg.de:80
+    https_proxy: http://www-int2.inet.dkfz-heidelberg.de:80
+  vars:
+    ansible_ssh_private_key_file: "~/.ssh/jip-ci-kaapana.pem"
+    http_proxy: http://www-int2.inet.dkfz-heidelberg.de:80
+    ci_username: "{{ kaapana_ci_username }}"
+    
+  vars_prompt:
+    - name: ci_password
+      prompt: "CI password?"
+      private: yes
+
+  tasks:
+    - name: Get password from env...
+      set_fact:
+        ci_password: "{{ lookup('env','CI_PASSWORD') or ci_password }}"
+      when: ci_password | length == 0
+
+    - name: Check Credentials
+      uri:                                        
+        url: "https://dktk-jip-registry.dkfz.de/api/v2.0/projects"    
+        method: GET                               
+        user: "{{ ci_username }}"            
+        password: "{{ ci_password }}"    
+        force_basic_auth: yes                    
+        return_content: yes
+        status_code: 200
+      register: registry_projects            
+      ignore_errors: no
+
+    - name: Credentials valid
+      fail: msg="Credentials not valid!"
+      when: registry_projects.json | length == 1
+    
+    - openssh_keypair:
+        path: "/home/ubuntu/.ssh/id_rsa"
+
+    - name: Set authorized key took from file
+      authorized_key:
+        user: ubuntu
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: install proxy
+      import_tasks: task_templates/proxy_ubuntu.yaml
+
+    - name: setup DKFZ timeserver
+      import_tasks: task_templates/timeserver_systemd.yaml
+
+    - name: Upgrade system
+      apt:
+        update_cache: yes
+        upgrade: yes
+      become: yes
+
+    - name: Install required system packages
+      become: yes
+      apt: name={{ item }} state=latest update_cache=yes
+      loop:
+        [
+          "apt-transport-https",
+          "ca-certificates",
+          "curl",
+          "git",
+          "software-properties-common",
+          "python3",
+          "python3-pip",
+          "python3-setuptools",
+          "unzip",
+          "virtualenv",
+        ]
+
+    - name: install python user requirements
+      become: no
+      pip:
+        name:
+          - pipenv
+          - autoenv
+          - ansible
+          - reportportal_client==5.0.1
+          - gitpython
+          - selenium
+          - openstacksdk
+        state: present
+        extra_args: --user
+        executable: pip3
+
+    - name: Add user path
+      become: yes
+      copy:
+        dest: /etc/profile.d/custom-path.sh
+        content: "PATH=$PATH:{{ ansible_env.HOME }}/.local/bin:/usr/bin:/bin:/snap/bin:/usr/local/bin"
+
+    - name: Set CI_USERNAME
+      become: no
+      lineinfile:
+        dest: "{{ ansible_env.HOME }}/.bashrc"
+        regexp: "^CI_USERNAME"
+        line: "export CI_USERNAME='{{ ci_username }}'"
+        state: present
+
+    - name: Set CI_PASSWORD
+      become: no
+      lineinfile:
+        dest: "{{ ansible_env.HOME }}/.bashrc"
+        state: present
+        regexp: "^CI_PASSWORD"
+        line: "export CI_PASSWORD='{{ ci_password }}'"
+
+    - name: add ci ssh key
+      become: no
+      copy:
+        src: "{{ ansible_ssh_private_key_file }}"
+        dest: "{{ ansible_env.HOME }}/.ssh/jip-ci-kaapana.pem"
+        owner: ubuntu
+        group: ubuntu
+        mode: 0600
+
+    - name: add kaapana ssh key
+      become: no
+      copy:
+        src: "~/.ssh/kaapana.pem"
+        dest: "{{ ansible_env.HOME }}/.ssh/kaapana.pem"
+        owner: ubuntu
+        group: ubuntu
+        mode: 0600
+
+    - name: configure ssh to use ansible key for phabricator
+      become: no
+      template:
+        src: file_templates/ssh_config
+        dest: "{{ ansible_env.HOME }}/.ssh/config"
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+    # - name: configure ssh to use ansible key for phabricator
+    #   become: yes
+    #   template:
+    #     src: ansible_templates/ssh_config
+    #     dest: "/root/.ssh/config"
+    #     owner: root
+    #     group: root
+    #     mode: 0644
+
+    - name: clone a private repository
+      git:
+        repo: ssh://git@phabricator.mitk.org:2222/source/kaapana.git
+        key_file: "{{ ansible_env.HOME }}/.ssh/jip-ci-kaapana.pem"
+        dest: "{{ ansible_env.HOME }}/kaapana"
+        version: develop
+        accept_hostkey: yes
+        force: yes
+        update: yes
+      become: no
+      become_user: ubuntu
+  
+    - name: Setup git username
+      git_config:
+        name: user.name
+        scope: global
+        value: jip-ci-kaapana
+      become: no
+
+    - name: Setup git email
+      git_config:
+        name: user.email
+        scope: global
+        value: jip-ci-kaapana@dkfz-heidelberg.de
+      become: no
+
+    - name: configure ssh to use ansible key for Phabricator
+      become: yes
+      template:
+        src: file_templates/ci_server_service
+        dest: /lib/systemd/system/ci-server.service
+
+    - name: Install chrome
+      become: yes
+      apt:
+        deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+    - name: Install chrome webdriver
+      become: yes
+      unarchive:
+        src: https://chromedriver.storage.googleapis.com/83.0.4103.39/chromedriver_linux64.zip
+        # src: https://chromedriver.storage.googleapis.com/80.0.3987.16/chromedriver_linux64.zip
+        dest: /usr/local/bin
+        remote_src: yes
+
+
+    # - name: Install scanrepo
+    #   become: yes
+    #   unarchive:
+    #     src: https://github.com/UKHomeOffice/repo-security-scanner/releases/download/0.4.0/scanrepo-0.4.0-linux-amd64.tar.gz
+    #     dest: /usr/local/bin
+    #     remote_src: yes
+
+    - name: Start ci server service
+      become: yes
+      service:
+        name: ci-server
+        enabled: yes
+        state: restarted
+      ignore_errors: no
+
+    - name: Create cronjob PATH
+      become: no
+      cron:
+        name: PATH 
+        value: "$PATH:{{ ansible_env.HOME }}/.local/bin:/usr/bin:/bin:/snap/bin:/usr/local/bin"
+        env: yes
+
+    - name: Create cronjob CI_USERNAME
+      become: no
+      cron:
+        name: CI_USERNAME
+        value: "{{ ci_username }}"
+        env: yes
+
+    - name: Create cronjob CI_PASSWORD
+      become: no
+      cron:
+        name: CI_PASSWORD
+        value: "{{ ci_password }}"
+        env: yes
+
+    - name: Create cronjob at 0 docker prune
+      become: no
+      cron:
+        name: "Docker prune"
+        minute: "0"
+        hour: "0"
+        job: "echo Start cleaning Docker images: $(date) | tee {{ ansible_env.HOME }}/docker_prune.log && docker system prune -f -a --volumes 2>&1 | tee -a {{ ansible_env.HOME }}/docker_prune.log"
+
+    - name: Delete lock file
+      become: no
+      cron:
+        name: "Delete ci_running.txt"
+        minute: "45"
+        hour: "0"
+        job: "rm -f ~/ci_running.txt"
+
+    - name: Create cronjob at 2 am to start ci reports
+      become: no
+      cron:
+        name: "ci reports"
+        minute: "0"
+        hour: "2"
+        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'kaapana CI Nightly' --branch develop -dsm --delete-instances --docs-test --email-notifications --all-platforms 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
+
+    - name: install docker
+      import_tasks: task_templates/snap_install_docker.yaml
+
+    - name: install helm
+      import_tasks: task_templates/snap_install_helm.yaml
+
+    - name: Get ReportPortal Docker-compose
+      get_url:
+        url: https://raw.githubusercontent.com/reportportal/reportportal/master/docker-compose.yml
+        dest: "{{ ansible_env.HOME }}/docker-compose.yml"
+
+    - name: Change report portal port settings
+      replace:
+        path: "{{ ansible_env.HOME }}/docker-compose.yml"
+        regexp: "8080:8080"
+        replace: "80:8080"
+
+    - name: Start report portal
+      docker_compose:
+        project_src: "{{ ansible_env.HOME }}/"
+        state: present
+
+    - debug:
+        msg: "Visit: http://{{ ansible_host }}"
+
+    - debug:
+        msg: "default 1q2w3e and superadmin erebus"
