@@ -15,15 +15,15 @@ import ci_playbooks
 os_image = "ubuntu"
 volume_size = "90"
 instance_flavor = "dkfz-8.16"
-ssh_key = "kaapana"
-os_project_name = "E230"
-os_project_id = "1396d67192c24eb7ab606cfae1151208"
+ssh_key = None
+os_project_name = None
+os_project_id = None
 instance_name = "kaapana-ci-depl-server"
-username = "k688h"
+username = None
 password = None
-gitlab_username = "kaapana_k"
-gitlab_password = "KgJA2V7iXbseymGoX5iY"
-gitlab_project = "kaushal.parekh/kaush_kaapana"
+gitlab_username = None
+gitlab_password = None
+gitlab_project = None
 delete_instance = False
 debug_mode = False
 
@@ -133,6 +133,11 @@ def launch():
         os_project_template = "E230-DKTK-JIP"
         os_project_name = input("OpenStack project [{}]:".format(os_project_template))
         os_project_name = os_project_template if (os_project_name is None or os_project_name == "") else os_project_name
+    
+    if gitlab_project is None:
+        gitlab_project_template = "kaapana/kaapana"
+        gitlab_project = input("OpenStack project [{}]:".format(gitlab_project_template))
+        gitlab_project = gitlab_project_template if (gitlab_project is None or gitlab_project == "") else gitlab_project
 
     if instance_name is None:
         instance_name_template = "{}-kaapana-instance".format(getpass.getuser())
