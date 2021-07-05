@@ -30,7 +30,7 @@
     - name: Set Custom Instance Image
       set_fact:
         instance_image: "{{ os }}"
-    # fail: msg="{{ os }} not suppored! [centos7 centos8 ubuntu]"
+    fail: msg="{{ os }} not suppored! [centos7 centos8 ubuntu]"
       when: 
       - os |lower != "centos7"
       - os |lower != "centos8"
