@@ -66,13 +66,6 @@ def deploy_platform(target_hosts):
 
     return return_value
 
-def install_dependencies_deploy_platform(target_hosts):
-    global gitlab_username, gitlab_password
-    return_value, logs = ci_playbooks.install_dependencies_deploy_platform(target_hosts=target_hosts, gitlab_username=gitlab_username, gitlab_password=gitlab_password, os_user=os_image, platform_name="Get new instance")
-    handle_logs(logs)
-
-    return return_value
-
 
 def remove_platform(target_hosts):
     global config_file
