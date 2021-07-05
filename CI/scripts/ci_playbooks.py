@@ -100,7 +100,7 @@ def deploy_platform(target_hosts, remote_username, gitlab_username, gitlab_passw
     return return_value, logs
 
 
-def delete_platform_deployment(target_hosts, platform_name, test_suite_name="Test Platform", config_file=None):
+def delete_platform_deployment(target_hosts, platform_name, test_suite_name="Test Platform"):
     global instance_ip_address
 
     playbook_path = os.path.join(
@@ -113,15 +113,12 @@ def delete_platform_deployment(target_hosts, platform_name, test_suite_name="Tes
         "KAAPANA_HOME": kaapana_home,
     }
 
-    if config_file is not None:
-        extra_vars["project_config"] = config_file
-
     return_value, logs = ci_playbook_execute.execute(playbook_path, testsuite=test_suite_name, testname="{0: <14}: Delete platform".format(
         platform_name), hosts=target_hosts, extra_vars=extra_vars)
     return return_value, logs
 
 
-def purge_filesystem(target_hosts, platform_name, test_suite_name="Test Platform", config_file=None):
+def purge_filesystem(target_hosts, platform_name, test_suite_name="Test Platform"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/05_purge_filesystem.yaml")
     if not os.path.isfile(playbook_path):
@@ -132,8 +129,6 @@ def purge_filesystem(target_hosts, platform_name, test_suite_name="Test Platform
         "server_domain": "",
         "KAAPANA_HOME": kaapana_home,
     }
-    if config_file is not None:
-        extra_vars["project_config"] = config_file
 
     return_value, logs = ci_playbook_execute.execute(playbook_path, testsuite=test_suite_name, testname="{0: <14}: Purge filesystem from".format(
         platform_name), hosts=target_hosts, extra_vars=extra_vars)

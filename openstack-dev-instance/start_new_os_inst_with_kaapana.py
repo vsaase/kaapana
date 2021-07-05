@@ -61,23 +61,21 @@ def install_server_dependencies(target_hosts):
 
 
 def deploy_platform(target_hosts):
-    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_project=gitlab_project, platform_name="Get new instance")
+    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_project=gitlab_project, platform_name="Kaapana platform")
     handle_logs(logs)
 
     return return_value
 
 
 def remove_platform(target_hosts):
-    global config_file
-    return_value, logs = ci_playbooks.delete_platform_deployment(target_hosts=target_hosts, config_file=config_file, platform_name="Get new instance")
+    return_value, logs = ci_playbooks.delete_platform_deployment(target_hosts=target_hosts, platform_name="Kaapana platform")
     handle_logs(logs)
 
     return return_value
 
 
 def purge_filesystem(target_hosts):
-    global config_file
-    return_value, logs = ci_playbooks.purge_filesystem(target_hosts=target_hosts, config_file=config_file, platform_name="Get new instance")
+    return_value, logs = ci_playbooks.purge_filesystem(target_hosts=target_hosts, platform_name="Kaapana platform")
     handle_logs(logs)
 
     return return_value
