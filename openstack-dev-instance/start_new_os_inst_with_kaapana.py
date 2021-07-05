@@ -15,14 +15,15 @@ import ci_playbooks
 os_image = "ubuntu"
 volume_size = "90"
 instance_flavor = "dkfz-8.16"
-ssh_key = None
-os_project_name = None
-os_project_id = None
+ssh_key = "kaapana"
+os_project_name = "E230"
+os_project_id = "1396d67192c24eb7ab606cfae1151208"
 instance_name = "kaapana-ci-depl-server"
-username = None
+username = "k688h"
 password = None
-gitlab_username = None
-gitlab_password = None
+gitlab_username = "kaapana_k"
+gitlab_password = "KgJA2V7iXbseymGoX5iY"
+gitlab_project = "kaushal.parekh/kaush_kaapana"
 delete_instance = False
 debug_mode = False
 
@@ -60,7 +61,7 @@ def install_server_dependencies(target_hosts):
 
 
 def deploy_platform(target_hosts):
-    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password,  platform_name="Get new instance")
+    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_project=gitlab_project, platform_name="Get new instance")
     handle_logs(logs)
 
     return return_value
@@ -152,6 +153,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--password", dest="password", default=None, required=False, help="OpenStack Password")
     parser.add_argument("-ugl", "--gitlab-username", dest="gitlab_username", default=None, help="GitLab Username")
     parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, required=False, help="GitLab Password")
+    parser.add_argument("-pjgl", "--gitlab-project", dest="gitlab_project", default=None, required=False, help="GitLab Project Name")
     parser.add_argument("-di", "--delete-instance", dest="delete_instance", default=None,  action='store_true', help="Delete existing instance first?")
     parser.add_argument("-in", "--instance-name", dest="instance_name", default=None, help="Name for the OpenStack instance?")
     parser.add_argument("-osp", "--os-project-name", dest="os_project_name", default=None, help="Which OpenStack project should be used?")
@@ -167,6 +169,7 @@ if __name__ == '__main__':
     password = args.password if args.password is not None else password
     gitlab_username = args.gitlab_username if args.gitlab_username is not None else gitlab_username 
     gitlab_password = args.gitlab_password if args.gitlab_password is not None else gitlab_password
+    gitlab_project = args.gitlab_project if args.gitlab_project is not None else gitlab_project
     instance_name = args.instance_name if args.instance_name is not None else instance_name
     volume_size = args.os_vol_size if args.os_vol_size is not None else volume_size
     instance_flavor = args.os_flavor if args.os_flavor is not None else instance_flavor
