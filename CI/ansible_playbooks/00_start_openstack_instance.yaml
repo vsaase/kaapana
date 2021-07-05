@@ -27,14 +27,16 @@
         - "{{ os_username }}"
         - "{{ os_password }}"
 
-    - name: Set Custom Instance Image
-      set_fact:
-        instance_image: "{{ os }}"
-    fail: msg="{{ os }} not suppored! [centos7 centos8 ubuntu]"
+    - name: Check if custom operating system supported
+      fail: msg="{{ os }} not suppored! [centos7 centos8 ubuntu]"
       when: 
       - os |lower != "centos7"
       - os |lower != "centos8"
       - os |lower != "ubuntu"
+      
+    - name: Set custom Instance Image (operating system)
+      set_fact:
+        instance_image: "{{ os }}"
 
     - fail: msg="{{ project_name }} this project is not supported! [E230 E230-DKTK-JIP E230-Kaapana-CI E230-DCIPHER-CI E130-OP41 E230-Production]"
       when: 
