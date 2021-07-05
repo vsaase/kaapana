@@ -102,7 +102,7 @@ def print_success(host):
     return "OK"
 
 def launch():
-    global os_image, volume_size, instance_flavor, ssh_key, os_project_name, instance_name, username, password, gitlab_username, gitlab_password
+    global os_image, volume_size, instance_flavor, ssh_key, os_project_name, instance_name, username, password, gitlab_username, gitlab_password, gitlab_project
 
     os.chdir(playbook_dir)
     if username is None:
