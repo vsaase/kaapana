@@ -29,8 +29,8 @@ args = {
     'ui_visible': True,
     'owner': 'UKF',
     'start_date': days_ago(0),
-    'retries': 0,
-    'retry_delay': timedelta(seconds=60)
+    'retries': 1,
+    'retry_delay': timedelta(seconds=30)
 }
 
 dag = DAG(
