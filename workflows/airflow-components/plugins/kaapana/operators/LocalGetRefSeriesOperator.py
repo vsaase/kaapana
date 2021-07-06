@@ -129,8 +129,13 @@ class LocalGetRefSeriesOperator(KaapanaPythonBaseOperator):
                     print("No search_policy -> only dicom_tags will be used...")
 
                 elif self.search_policy == 'reference_uid':
+                    ref_series_items = None
                     if (0x0008, 0x1115) in incoming_dcm:
-                        for ref_series in incoming_dcm[0x0008, 0x1115]:
+                        ref_series_items = incoming_dcm[0x0008, 0x1115].value
+                    if (0x3006,0x0010) in incoming_dcm and (0x3006,0x0012) in incoming_dcm[0x3006,0x0010].value[0] and (0x3006,0x0014) in incoming_dcm[0x3006,0x0010].value[0][0x3006,0x0012].value[0]:
+                        ref_series_items = incoming_dcm[0x3006,0x0010].value[0][0x3006,0x0012].value[0][0x3006,0x0014].value
+                    if ref_series_items is not None:
+                        for ref_series in ref_series_items:
                             if (0x0020, 0x000E) not in ref_series:
                                 print("# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                                 print("# ")
@@ -140,6 +145,7 @@ class LocalGetRefSeriesOperator(KaapanaPythonBaseOperator):
                                 print("# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                                 exit(1)
                             search_filters['SeriesInstanceUID'] = str(ref_series[0x0020, 0x000E].value)
+                            break
                     else:
                         print("# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                         print("# ")
