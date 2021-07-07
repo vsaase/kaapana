@@ -23,7 +23,7 @@ username = None
 password = None
 gitlab_username = None
 gitlab_password = None
-gitlab_project = None
+gitlab_project = None # e.g. "kaapana/kaapana"
 delete_instance = False
 debug_mode = False
 
