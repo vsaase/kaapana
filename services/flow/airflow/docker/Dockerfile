@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM local/avid-base:0.1.0
 
 LABEL IMAGE="airflow"
 LABEL VERSION="1.10.15-vdev"
