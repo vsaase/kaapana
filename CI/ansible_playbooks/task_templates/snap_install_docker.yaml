@@ -76,11 +76,11 @@
   when: proxyinstalled.changed
 
 - name: Docker login
-  command: "/snap/bin/docker login dktk-jip-registry.dkfz.de -u {{ ci_username }} -p {{ ci_password }}"
+  command: "/snap/bin/docker login dktk-jip-registry.dkfz.de -u {{ ci_username }} -p {{ os_ci_password }}"
   become: no
   ignore_errors: no
 
 - name: Docker login
-  command: "/snap/bin/docker login dktk-jip-registry.dkfz.de -u {{ ci_username }} -p {{ ci_password }}"
+  command: "/snap/bin/docker login dktk-jip-registry.dkfz.de -u {{ ci_username }} -p {{ os_ci_password }}"
   become: yes
   ignore_errors: no

@@ -14,14 +14,14 @@ To start a new instance of the CI server:
 - Will start a new OpenStack instance with all CI configuration
 - ReportPortal available at http://instance-ip/ui -> default username/pw: default:1q2w3e  and superadmin:erebus
 - You need to configure a "kaapana" project in report portal + new user
-- Adapt the access-token in `kaapana/CI/scripts/start_ci_pipeline.py` the the new user
+- Adapt the access-token in `kaapana/CI/scripts/start_ci_pipeline.py` to the new user
 - Cronjob will trigger the pipeline each night at 1 am
 - Http CI trigger running @ http://instance-ip:8080/cikaapana/<branch> 
   - eg: /cikaapana/feature/test or /cikaapana/develop
 
 ## CI pipline (cronjob)
 
-### Delete Docker cache from instance @ 12pm
+### Delete Docker cache from instance @ 12am
 
 - [x] docker system prune -f -a --volumes
 - [ ]    
