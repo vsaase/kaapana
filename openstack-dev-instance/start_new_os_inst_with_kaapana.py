@@ -16,15 +16,15 @@ os_image = "ubuntu"
 volume_size = "90"
 instance_flavor = "dkfz-8.16"
 ssh_key = "kaapana"
-os_project_name = "E230"
-os_project_id = "1396d67192c24eb7ab606cfae1151208"
-instance_name = "kaush-kaapana-serverinst-playbook-test"
-username = "kaapana-ci"
-password = "HawaiiBeach2020"
-gitlab_username = "gitlab-ci-token"
-gitlab_password = "z4ihKRwdyXA6UPXum4Gx"
-gitlab_registry = "gitlab.hzdr.de/kaushal.parekh/kaapana-ci"
-delete_instance = True
+os_project_name = "E230-Kaapana-CI"
+os_project_id = "2df9e30325c849dbadcc07d7ffd4b0d6"
+instance_name = "kaapana-serverinst-playbook-test"
+username = None
+password = None
+gitlab_username = None
+gitlab_password = None
+gitlab_registry = None
+delete_instance = False
 debug_mode = False
 
 def handle_logs(logs):
