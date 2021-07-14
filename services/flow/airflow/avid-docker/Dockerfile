@@ -6,10 +6,12 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
 	ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+
+LABEL VERSION="07.14.2021"
 WORKDIR /
 ARG username
 ARG password
-#build container with: docker build -t --build-arg username=Username --build-arg password=password
+#build container with: docker build -t --build-arg username=Username --build-arg password=password local/avid-base:0.1.0
 RUN git clone https://"$username":"$password"@phabricator.mitk.org/diffusion/AVID/avid.git ./avid-src  && \
     cd avid-src  &&\
 	git checkout master # origin/T22565-GeneralizeBatchActions
@@ -33,7 +35,5 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY --from=stage /avid-src ./avid-src
 
 RUN cd avid-src && \
-	python3 setup.py develop # && \
-	#cd ..  \
-	#rm ./avid-src
+	python3 setup.py develop
 
