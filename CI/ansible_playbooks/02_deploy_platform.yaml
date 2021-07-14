@@ -74,7 +74,7 @@
       replace:
         path: "{{ lookup('env','HOME') }}/install_platform.sh"
         regexp: CONTAINER_REGISTRY_URL=""
-        replace: CONTAINER_REGISTRY_URL="registry.hzdr.de/{{ gitlab_project }}"
+        replace: CONTAINER_REGISTRY_URL="{{ gitlab_registry }}"
       delegate_to: 127.0.0.1
     
     - name: Make deployment script executable

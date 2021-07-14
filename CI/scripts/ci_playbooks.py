@@ -70,7 +70,7 @@ def start_install_server_dependencies(target_hosts, remote_username, suite_name=
     return return_value, logs
 
 
-def deploy_platform(target_hosts, remote_username, gitlab_username, gitlab_password, gitlab_project, platform_name, test_suite_name="Test Platform"):
+def deploy_platform(target_hosts, remote_username, gitlab_username, gitlab_password, gitlab_registry, platform_name, test_suite_name="Test Platform"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/02_deploy_platform.yaml")
     if not os.path.isfile(playbook_path):
@@ -81,7 +81,7 @@ def deploy_platform(target_hosts, remote_username, gitlab_username, gitlab_passw
         "remote_username": remote_username,
         "gitlab_username": gitlab_username,
         "gitlab_password": gitlab_password,
-        "gitlab_project" : gitlab_project
+        "gitlab_registry" : gitlab_registry
     }
 
     return_value, logs = ci_playbook_execute.execute(playbook_path, testsuite=test_suite_name, testname="{0: <14}: Deploy platform".format(platform_name), hosts=target_hosts, extra_vars=extra_vars)

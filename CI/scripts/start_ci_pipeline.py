@@ -41,11 +41,11 @@ start_parameters = ""
 volume_size = "90"
 instance_flavor = "dkfz-8.16"
 ssh_key = "kaapana"
-instance_name = "kaapana-ci-depl-server-test"
+instance_name = None
 launch_name = "Kaapana CI deployment test"
 gitlab_username = None
 gitlab_password = None
-gitlab_project = None
+gitlab_registry = None
 
 ci_servers = {}
 
@@ -313,6 +313,10 @@ def check_charts(docker_tag_list=[]):
     return docker_containers_used
 
 
+def build_and_push_containers():
+    
+
+
 def start_os_instance(instance_name=instance_name, suite_name="Test Server Instance", os_image=os_image):
     return_value, logs = ci_playbooks.start_os_instance(username=username,
                                                         password=password,
@@ -341,7 +345,7 @@ def install_dependencies(target_hosts, suite_name="Install Server Dependencies",
 
 
 def deploy_platform(target_hosts, platform_name, suite_name="Deploy Platform", os_image=os_image):
-    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_project=gitlab_project, platform_name=platform_name)
+    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_registry=gitlab_registry, platform_name=platform_name)
     for log in logs:
         handle_logs(log)
 
@@ -649,8 +653,8 @@ if __name__ == '__main__':
     parser.add_argument("-u", "--username", dest="username", default="kaapana-ci", help="Openstack Username")
     parser.add_argument("-p", "--password", dest="password", default=None, required=False, help="Openstack Password")
     parser.add_argument("-ugl", "--gitlab-username", dest="gitlab_username", default=None, help="GitLab Username")
-    parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, required=False, help="GitLab Password")
-    parser.add_argument("-pjgl", "--gitlab-project", dest="gitlab_project", default=None, required=False, help="GitLab Project Name")
+    parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, help="GitLab Password")
+    parser.add_argument("-rgl", "--gitlab-registry", dest="gitlab_registry", default=None, help="GitLab Registry Link")
     parser.add_argument("-di", "--delete-instances", dest="delete_instances", default=False, action='store_true', help="Should a new OS CI instance be created for the tests?")
     parser.add_argument("-en", "--email-notifications", dest="mail_notify", default=False, action='store_true', help="Enable e-mail notifications for errors.")
     parser.add_argument("-bo", "--build-only", dest="build_only", default=False, action='store_true', help="No platform deployment and UI tests.")
@@ -669,7 +673,7 @@ if __name__ == '__main__':
     password = args.password if args.password is not None else password
     gitlab_username = args.gitlab_username if args.gitlab_username is not None else gitlab_username 
     gitlab_password = args.gitlab_password if args.gitlab_password is not None else gitlab_password
-    gitlab_project = args.gitlab_project if args.gitlab_project is not None else gitlab_project
+    gitlab_registry = args.gitlab_registry if args.gitlab_registry is not None else gitlab_registry
     mail_notification = args.mail_notify
     docs_test = args.docs_test
     build_only = args.build_only
@@ -679,18 +683,13 @@ if __name__ == '__main__':
     disable_report = args.disable_report
     all_platforms = args.all_platforms
     launch_name = launch_name
-
+    instance_name = instance_name if instance_name is not None else args.inst_name
     os_project_name = os_project_name
     os_project_id = os_project_id
     start_parameters = start_parameters
-
     volume_size = volume_size
     instance_flavor = instance_flavor
     ssh_key = ssh_key
-    instance_name = instance_name if instance_name is not None else args.inst_name
-    gitlab_username = gitlab_username
-    gitlab_password = gitlab_password
-    gitlab_project = gitlab_project
 
     repo = Repo(kaapana_dir)
 
@@ -719,10 +718,10 @@ if __name__ == '__main__':
     branch_name = repo.active_branch.name
     
     # # TODO: following is just temp, needs to be removed
-    # lock_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    #     os.path.dirname(os.path.abspath(__file__))))), "ci_running.txt")
-    # if os.path.isfile(lock_file):
-    #     print("Lock file present! Now deleting it before proceeding...")
-    #     os.remove(lock_file)
+    lock_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))), "ci_running.txt")
+    if os.path.isfile(lock_file):
+        print("Lock file present! Now deleting it before proceeding...")
+        os.remove(lock_file)
 
     launch()

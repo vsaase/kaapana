@@ -15,16 +15,16 @@ import ci_playbooks
 os_image = "ubuntu"
 volume_size = "90"
 instance_flavor = "dkfz-8.16"
-ssh_key = None
-os_project_name = None
-os_project_id = None
-instance_name = "kaapana-ci-depl-server"
-username = None
-password = None
-gitlab_username = None
-gitlab_password = None
-gitlab_project = None # e.g. "kaapana/kaapana"
-delete_instance = False
+ssh_key = "kaapana"
+os_project_name = "E230"
+os_project_id = "1396d67192c24eb7ab606cfae1151208"
+instance_name = "kaush-kaapana-serverinst-playbook-test"
+username = "kaapana-ci"
+password = "HawaiiBeach2020"
+gitlab_username = "gitlab-ci-token"
+gitlab_password = "z4ihKRwdyXA6UPXum4Gx"
+gitlab_registry = "gitlab.hzdr.de/kaushal.parekh/kaapana-ci"
+delete_instance = True
 debug_mode = False
 
 def handle_logs(logs):
@@ -56,7 +56,7 @@ def install_server_dependencies(target_hosts):
 
 
 def deploy_platform(target_hosts):
-    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_project=gitlab_project, platform_name="Kaapana platform")
+    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_registry=gitlab_registry, platform_name="Kaapana platform")
     handle_logs(logs)
 
     return return_value
@@ -97,7 +97,7 @@ def print_success(host):
     return "OK"
 
 def launch():
-    global os_image, volume_size, instance_flavor, ssh_key, os_project_name, instance_name, username, password, gitlab_username, gitlab_password, gitlab_project
+    global os_image, volume_size, instance_flavor, ssh_key, os_project_name, instance_name, username, password, gitlab_username, gitlab_password, gitlab_registry
 
     os.chdir(playbook_dir)
     if username is None:
@@ -120,10 +120,10 @@ def launch():
         os_project_name = input("OpenStack project [{}]:".format(os_project_template))
         os_project_name = os_project_template if (os_project_name is None or os_project_name == "") else os_project_name
     
-    if gitlab_project is None:
-        gitlab_project_template = "kaapana/kaapana"
-        gitlab_project = input("OpenStack project [{}]:".format(gitlab_project_template))
-        gitlab_project = gitlab_project_template if (gitlab_project is None or gitlab_project == "") else gitlab_project
+    if gitlab_registry is None:
+        gitlab_registry_template = "registry.hzdr.de/kaapana/kaapana"
+        gitlab_registry = input("OpenStack project [{}]:".format(gitlab_registry_template))
+        gitlab_registry = gitlab_registry_template if (gitlab_registry is None or gitlab_registry == "") else gitlab_registry
 
     if instance_name is None:
         instance_name_template = "{}-kaapana-instance".format(getpass.getuser())
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--password", dest="password", default=None, required=False, help="OpenStack Password")
     parser.add_argument("-ugl", "--gitlab-username", dest="gitlab_username", default=None, help="GitLab Username")
     parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, required=False, help="GitLab Password")
-    parser.add_argument("-pjgl", "--gitlab-project", dest="gitlab_project", default=None, required=False, help="GitLab Project Name")
+    parser.add_argument("-rgl", "--gitlab-registry", dest="gitlab_registry", default=None, required=False, help="GitLab Registry Link")
     parser.add_argument("-di", "--delete-instance", dest="delete_instance", default=None,  action='store_true', help="Delete existing instance first?")
     parser.add_argument("-in", "--instance-name", dest="instance_name", default=None, help="Name for the OpenStack instance?")
     parser.add_argument("-osp", "--os-project-name", dest="os_project_name", default=None, help="Which OpenStack project should be used?")
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     password = args.password if args.password is not None else password
     gitlab_username = args.gitlab_username if args.gitlab_username is not None else gitlab_username 
     gitlab_password = args.gitlab_password if args.gitlab_password is not None else gitlab_password
-    gitlab_project = args.gitlab_project if args.gitlab_project is not None else gitlab_project
+    gitlab_registry = args.gitlab_registry if args.gitlab_registry is not None else gitlab_registry
     instance_name = args.instance_name if args.instance_name is not None else instance_name
     volume_size = args.os_vol_size if args.os_vol_size is not None else volume_size
     instance_flavor = args.os_flavor if args.os_flavor is not None else instance_flavor
