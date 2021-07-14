@@ -213,5 +213,4 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
 
 if __name__ == "__main__":
     for log in start(platform_urls=["vm-128-241.cloud.dkfz-heidelberg.de"]):
-    # for log in start(platform_urls=["10.128.128.241"]):
         print(json.dumps(log, indent=4, sort_keys=True))

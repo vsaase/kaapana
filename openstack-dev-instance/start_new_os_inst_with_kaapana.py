@@ -49,13 +49,8 @@ def start_os_instance():
     return return_value
 
 
-def change_hostname(target_hosts):
-    return_value, logs = ci_playbooks.change_openstack_hostname(target_hosts=target_hosts, test_suite_name="Get new instance")
-    handle_logs(logs)
-    return return_value
-
 def install_server_dependencies(target_hosts):
-    return_value, logs = ci_playbooks.start_install_server_dependencies(target_hosts=target_hosts, remote_username=os_image, test_suite_name="Get new instance")
+    return_value, logs = ci_playbooks.start_install_server_dependencies(target_hosts=target_hosts, remote_username=os_image, suite_name="Get new instance")
     handle_logs(logs)
     return return_value
 
@@ -137,7 +132,6 @@ def launch():
 
     result = delete_os_instance() if delete_instance else "SKIPPED"
     instance_ip_address = start_os_instance()
-    result = change_hostname(target_hosts=[instance_ip_address]) if instance_ip_address != "FAILED" else "FAILED"
     result = install_server_dependencies(target_hosts=[instance_ip_address]) if instance_ip_address != "FAILED" else "FAILED"
     result = deploy_platform(target_hosts=[instance_ip_address]) if result != "FAILED" else "FAILED"
     result = print_success(instance_ip_address) if result != "FAILED" else "FAILED"

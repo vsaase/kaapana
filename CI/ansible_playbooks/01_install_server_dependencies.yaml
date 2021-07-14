@@ -18,6 +18,12 @@
     user: "{{ remote_username }}"
 
   tasks:
+    - name: Set OpenStack hostname
+      become: "{{ 'no' if user == 'root' else 'yes' }}"
+      hostname:
+        name: "vm-{{ inventory_hostname.split('.')[2] }}-{{ inventory_hostname.split('.')[3] }}.cloud.dkfz-heidelberg.de"
+      when: inventory_hostname.split('.')[0] == "10"
+
     - name: Download server_installation.sh file locally
       get_url: 
         url: https://raw.githubusercontent.com/kaapana/kaapana/develop/server-installation/server_installation.sh

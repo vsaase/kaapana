@@ -27,25 +27,25 @@ suites = {}
 rp_service = None
 lock_file = None
 suite_done = None
-branch_name = None
 mail_notification = False
 mail_max = 10
 mail_counter = 0
-build_only = False
-docs_test = False
-charts_only = False
-docker_only = False
-dpl_only = False
-disable_report = False
-all_platforms = False
 
 username = None
 password = None
-delete_instances = False
-# project_name = "E230-DKTK-JIP"
-project_name = "E230-KAAPANA-CI"
-running_processes = []
+os_image= "ubuntu"
+os_project_name = "E230-Kaapana-CI"
+os_project_id = "2df9e30325c849dbadcc07d7ffd4b0d6"
 start_parameters = ""
+
+volume_size = "90"
+instance_flavor = "dkfz-8.16"
+ssh_key = "kaapana"
+instance_name = "kaapana-ci-depl-server-test"
+launch_name = "Kaapana CI deployment test"
+gitlab_username = None
+gitlab_password = None
+gitlab_project = None
 
 ci_servers = {}
 
@@ -313,9 +313,7 @@ def check_charts(docker_tag_list=[]):
     return docker_containers_used
 
 
-def start_os_instance(instance_name="kaapana-test-instance", suite_name="Test Server Instance", os_image="centos7"):
-    return_value, logs = ci_playbooks.start_os_instance(
-        username=username, password=password, instance_name=instance_name, project_name=project_name, volume_size="90", instance_flavor="dkfz-8.16", test_suite_name=suite_name, os_image=os_image)
+def start_os_instance(instance_name=instance_name, suite_name="Test Server Instance", os_image=os_image):
     return_value, logs = ci_playbooks.start_os_instance(username=username,
                                                         password=password,
                                                         instance_name=instance_name,
@@ -324,53 +322,26 @@ def start_os_instance(instance_name="kaapana-test-instance", suite_name="Test Se
                                                         os_image=os_image,
                                                         volume_size=volume_size,
                                                         instance_flavor=instance_flavor,
-                                                        ssh_key=ssh_key)
+                                                        ssh_key=ssh_key,
+                                                        test_suite_name=suite_name)
     for log in logs:
         handle_logs(log)
 
     return return_value
 
 
-def install_dependencies(target_hosts, suite_name="Install Server Dependencies", docs_test=False):
+def install_dependencies(target_hosts, suite_name="Install Server Dependencies", os_image=os_image):
     print("target_hosts: {}".format(target_hosts))
     print("suite_name: {}".format(suite_name))
-    print("docs_test: {}".format(docs_test))
-
-    return_value, logs = ci_playbooks.start_install_server_dependencies(
-        target_hosts=target_hosts, test_suite_name=suite_name, docs_test=docs_test)
+    return_value, logs = ci_playbooks.start_install_server_dependencies(target_hosts=target_hosts, remote_username=os_image, suite_name=suite_name)
     for log in logs:
         handle_logs(log)
 
     return return_value
 
 
-def install_dependencies_microk8s(target_hosts, suite_name="Install Server Dependencies"):
-    return_value, logs = ci_playbooks.start_install_server_dependencies_microk8s(
-        target_hosts=target_hosts, test_suite_name=suite_name)
-    for log in logs:
-        handle_logs(log)
-
-    return return_value
-
-
-def delete_os_instance(instance_name="kaapana-test-instance", suite_name="Test Server Instance",):
-    return_value, logs = ci_playbooks.delete_os_instance(
-        username=username, password=password, instance_name=instance_name, test_suite_name=suite_name, project_name=project_name)
-    for log in logs:
-        handle_logs(log)
-
-    return return_value
-
-
-def delete_ci_instances(suite_name="Delete CI Instances"):
-    for key, val in ci_servers.items():
-        delete_os_instance(
-            instance_name=val["instance_name"], suite_name=suite_name)
-
-
-def deploy_platform(target_hosts, platform_name, config_file, suite_name="Deploy Platform", docs_test=False):
-    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, config_file=config_file, username=username,
-                                                      password=password, test_suite_name=suite_name,  platform_name=platform_name, docs_test=docs_test)
+def deploy_platform(target_hosts, platform_name, suite_name="Deploy Platform", os_image=os_image):
+    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_project=gitlab_project, platform_name=platform_name)
     for log in logs:
         handle_logs(log)
 
@@ -384,35 +355,50 @@ def start_ui_tests(target_hosts, platform_name, suite_name="UI Tests"):
     return True
 
 
-def remove_platform(target_hosts, platform_name, suite_name="Remove Platform", config_file=None):
-    return_value, logs = ci_playbooks.delete_platform_deployment(target_hosts=target_hosts, config_file=config_file, test_suite_name=suite_name, platform_name=platform_name)
-    for log in logs:
-        handle_logs(log)
-
-    return return_value
-
-
-def purge_filesystem(target_hosts, platform_name, suite_name="Purge Filesystem", config_file=None):
-    return_value, logs = ci_playbooks.purge_filesystem(
-        target_hosts=target_hosts, test_suite_name=suite_name, config_file=config_file, platform_name=platform_name)
-    for log in logs:
-        handle_logs(log)
-
-    return return_value
-
-
-def test_platform_version(target_hosts, config_file, platform_name):
-    result = remove_platform(target_hosts=target_hosts, config_file=config_file, platform_name=platform_name) 
-    result = purge_filesystem(target_hosts=target_hosts, config_file=config_file, platform_name=platform_name) if result != "FAILED" else "FAILED"
-    result = deploy_platform(target_hosts=target_hosts, config_file=config_file, platform_name=platform_name) if result != "FAILED" else "FAILED"
-    result = start_ui_tests(target_hosts=target_hosts, platform_name=platform_name,) if result != "FAILED" else "FAILED"
+def test_platform_version(target_hosts, platform_name):
+    result = deploy_platform(target_hosts=target_hosts, platform_name=platform_name) # if result != "FAILED" else "FAILED"
+    result = start_ui_tests(target_hosts=target_hosts, platform_name=platform_name) if result != "FAILED" else "FAILED"
+    # result = remove_platform(target_hosts=target_hosts, platform_name=platform_name) 
+    # result = purge_filesystem(target_hosts=target_hosts, platform_name=platform_name) if result != "FAILED" else "FAILED"
 
     return result
 
 
+def remove_platform(target_hosts, platform_name, suite_name="Remove Platform"):
+    return_value, logs = ci_playbooks.delete_platform_deployment(target_hosts=target_hosts, suite_name=suite_name, platform_name=platform_name)
+    for log in logs:
+        handle_logs(log)
+
+    return return_value
+
+
+def purge_filesystem(target_hosts, platform_name, suite_name="Purge Filesystem"):
+    return_value, logs = ci_playbooks.purge_filesystem(
+        target_hosts=target_hosts, suite_name=suite_name, platform_name=platform_name)
+    for log in logs:
+        handle_logs(log)
+
+    return return_value
+
+
+def delete_os_instance(instance_name=instance_name, suite_name="Test Server Instance",):
+    return_value, logs = ci_playbooks.delete_os_instance(
+        username=username, password=password, instance_name=instance_name, suite_name=suite_name, os_project_name=os_project_name, os_project_id=os_project_id)
+    for log in logs:
+        handle_logs(log)
+
+    return return_value
+
+
+def delete_ci_instances(suite_name="Delete CI Instances"):
+    for key, val in ci_servers.items():
+        delete_os_instance(
+            instance_name=val["instance_name"], suite_name=suite_name)
+
+
 def startup_sequence(os_image):
     suite_name = "Test Server Startup"
-    instance_name = "{}-test-server".format(os_image).lower()
+    # instance_name = "{}-test-server".format(os_image).lower()
 
     recreated = delete_os_instance(
         instance_name=instance_name,
@@ -462,8 +448,10 @@ def launch():
         with open(lock_file, 'w') as the_file:
             the_file.write('{}'.format(os.getpid()))
 
-    rp_endpoint = "http://10.128.130.67:80"
-    token = "c196043d-1dd7-47d3-b4ff-ad83380e308c"
+    # rp_endpoint = "http://10.128.130.67:80"
+    # token = "c196043d-1dd7-47d3-b4ff-ad83380e308c"
+    rp_endpoint = "http://10.128.130.238:80"
+    token = "bfeece88-8239-454b-a8ee-cea5fe62e7a6"
     project = "kaapana"
 
     launch_doc = """
@@ -485,7 +473,7 @@ def launch():
     except Exception as e:
         os.remove(lock_file)
         print(e)
-        print("Init error")
+        print("Report portal service init error")
         exit(1)
 
     try:
@@ -518,7 +506,7 @@ def launch():
             if docs_test:
                 startup_sequence("centos7")
 
-            startup_sequence("centos8")
+            # startup_sequence("centos8")
             startup_sequence("ubuntu")
 
             log = {
@@ -582,7 +570,7 @@ def launch():
                     handle_logs(log)
 
             if len(host_ips) > 0:
-                result = install_dependencies_microk8s(target_hosts=host_ips)
+                result = install_dependencies(target_hosts=host_ips)
             else:
                 print("No HOSTS found...")
                 result = "FAILED"
@@ -594,8 +582,7 @@ def launch():
 
             result = test_platform_version(
                 target_hosts=host_ips,
-                config_file="jip_dev.yaml",
-                platform_name="JIP dev"
+                platform_name="Kaapana"
             )
 
             if all_platforms:
@@ -656,11 +643,14 @@ if __name__ == '__main__':
         start_parameters = "None"
 
     parser = ArgumentParser()
-    parser.add_argument("-ln", "--launch-name", dest="launch_name", default="kaapana CI Test", help="Name for the CI-instance.")
+    parser.add_argument("-in", "--inst-name", dest="inst_name", default="kaapana CI Test", help="Name for the CI-instance")
     parser.add_argument("-b", "--branch", dest="branch", default=None, help="Branch to run the CI on. !!CAUTION: will reset the git repo to last commit!")
     parser.add_argument("-dsm", "--disable-safe-mode", dest="disable_safe_mode", default=False, action='store_true',help="Disable safe-mode")
     parser.add_argument("-u", "--username", dest="username", default="kaapana-ci", help="Openstack Username")
     parser.add_argument("-p", "--password", dest="password", default=None, required=False, help="Openstack Password")
+    parser.add_argument("-ugl", "--gitlab-username", dest="gitlab_username", default=None, help="GitLab Username")
+    parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, required=False, help="GitLab Password")
+    parser.add_argument("-pjgl", "--gitlab-project", dest="gitlab_project", default=None, required=False, help="GitLab Project Name")
     parser.add_argument("-di", "--delete-instances", dest="delete_instances", default=False, action='store_true', help="Should a new OS CI instance be created for the tests?")
     parser.add_argument("-en", "--email-notifications", dest="mail_notify", default=False, action='store_true', help="Enable e-mail notifications for errors.")
     parser.add_argument("-bo", "--build-only", dest="build_only", default=False, action='store_true', help="No platform deployment and UI tests.")
@@ -675,8 +665,11 @@ if __name__ == '__main__':
     branch = args.branch
     disable_safe_mode = args.disable_safe_mode
     delete_instances = args.delete_instances
-    username = args.username
-    password = args.password
+    username = args.username if args.username is not None else username
+    password = args.password if args.password is not None else password
+    gitlab_username = args.gitlab_username if args.gitlab_username is not None else gitlab_username 
+    gitlab_password = args.gitlab_password if args.gitlab_password is not None else gitlab_password
+    gitlab_project = args.gitlab_project if args.gitlab_project is not None else gitlab_project
     mail_notification = args.mail_notify
     docs_test = args.docs_test
     build_only = args.build_only
@@ -685,7 +678,20 @@ if __name__ == '__main__':
     dpl_only = args.dpl_only
     disable_report = args.disable_report
     all_platforms = args.all_platforms
-    launch_name = args.launch_name
+    launch_name = launch_name
+
+    os_project_name = os_project_name
+    os_project_id = os_project_id
+    start_parameters = start_parameters
+
+    volume_size = volume_size
+    instance_flavor = instance_flavor
+    ssh_key = ssh_key
+    instance_name = instance_name if instance_name is not None else args.inst_name
+    gitlab_username = gitlab_username
+    gitlab_password = gitlab_password
+    gitlab_project = gitlab_project
+
     repo = Repo(kaapana_dir)
 
     print("++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -711,4 +717,12 @@ if __name__ == '__main__':
         repo.remote().pull(branch)
 
     branch_name = repo.active_branch.name
+    
+    # # TODO: following is just temp, needs to be removed
+    # lock_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+    #     os.path.dirname(os.path.abspath(__file__))))), "ci_running.txt")
+    # if os.path.isfile(lock_file):
+    #     print("Lock file present! Now deleting it before proceeding...")
+    #     os.remove(lock_file)
+
     launch()
