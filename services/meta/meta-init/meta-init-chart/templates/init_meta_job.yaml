@@ -65,4 +65,4 @@ spec:
             path: kibana-dashboard.json
       imagePullSecrets:
       - name: registry-secret
-  backoffLimit: 0
+  backoffLimit: 10
