@@ -6,7 +6,34 @@ Frequently Asked Questions (FAQ)
 There seems to be something wrong with the landing-page visualization in the Browser
 ------------------------------------------------------------------------------------
 
-Most probably the Browser-Version is not supported. We try to support as many Browsers as possible.
+Most probably the Browser-Version is not supported. We try to support as many Browsers as possible. If the problem persists, an overview of running pods on the server provides further information. 
+Running pods can be viewed via:
+::
+    kubectl get pods -all-namespaces
+
+To access the platform, at least the landingpage pod and keycloak must be running.
+
+.. figure:: _static/img/running_pods.png
+    :align: center
+    :scale: 25%
+
+Un-/ reinstall the platform
+---------------------------
+Uninstalling and reinstalling the platform is done by re-running the :term:`platform-installation-script`, which is located at
+:code:`kaapana/platforms/kaapana-platform/platform-installation/install_platform.sh`.
+Execute the script again:
+:code:`./install_platform.sh`
+
+.. figure:: _static/img/uninstall_platform.png
+    :align: center
+    :scale: 25%
+
+Choose the preferred option 
+1. For Upgrading the platform select :code:`1`
+2. For Re-installation of the platform select :code:`2`
+3. For Uninstalling the platform select :code:`3`
+4. Quit via :code:`4`
+ 
 
 
 Kibana dashboard does not work
@@ -131,3 +158,6 @@ If the resource is still there delete it with the ``no-hooks`` options:
 ::
 
    helm uninstall --no-hooks <release-name>
+
+
+
