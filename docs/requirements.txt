@@ -1,6 +1,6 @@
 # Python requirements for the documentation
 six
-sphinx==3.2.1
+sphinx==4.1.1
 sphinx_rtd_theme
 sphinxcontrib-mermaid
 sphinx-tabs
