@@ -11,7 +11,7 @@ Workflows
 Collect metadata (collect-metadata)
 -----------------------------------
 | **What's going on?**
-| 1) DICOMs are anonymized by removing a list of personal tags
+| 1) DICOMss are anonymized by removing a list of personal tags
 | 2) Meta data of the DICOMs are extracted and written to JSON files
 | 3) JSON files are concatenated to one JSON file.
 | 4) JSON file is zipped and send with a timestamp to the bucket *download* in Minio, where the file can be downloaded
