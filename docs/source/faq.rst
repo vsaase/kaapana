@@ -11,11 +11,18 @@ Running pods can be viewed via:
 ::
     kubectl get pods -all-namespaces
 
-To access the platform, at least the landingpage pod and keycloak must be running.
+To access the platform, at least the landingpage, keycloak and louketo must be running.
 
 .. figure:: _static/img/running_pods.png
     :align: center
     :scale: 25%
+
+
+More detailed information about the status of a pod is provided by:
+:code:`kubectl -n <THE NAMESPACE> logs <NAME OF THE POD>`
+:code:`kubectl -n <THE NAMESPACE> describe pods <NAME OF THE POD>`
+A pod can be deleted via:
+:code:`kubectl -n <THE NAMESPACE> delete pods <NAME OF THE POD>`
 
 Un-/ reinstall the platform
 ---------------------------
