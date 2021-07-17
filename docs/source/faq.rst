@@ -180,6 +180,6 @@ and to delete the kaapana folder:
 :code:`/home/kaapana`
 
 
-What is the difference between 
+
 
 
