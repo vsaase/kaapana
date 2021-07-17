@@ -40,6 +40,8 @@ Choose the preferred option
 2. For Re-installation of the platform select :code:`2`
 3. For Uninstalling the platform select :code:`3`
 4. Quit via :code:`4`
+
+Upgrading the platform performs a :code:`helm upgrade`, while reinstalling the platform deletes the current deployment and installs the platform again. 
  
 
 
@@ -166,5 +168,18 @@ If the resource is still there delete it with the ``no-hooks`` options:
 
    helm uninstall --no-hooks <release-name>
 
+
+You forgot your password for the platform
+-----------------------------------------
+
+If you want to change your password or you forgot the password, you can login directly to keycloak. Login with your admin user and change the password of the JIP User:
+:code:`https://<NAME OF YOUR SERVER>/auth/`
+In case this fails, you may need to reinstall the platform. Before you do so, make sure to delete the Helm charts:
+:code:`Helm del <NAME>`
+and to delete the kaapana folder:
+:code:`/home/kaapana`
+
+
+What is the difference between 
 
 
