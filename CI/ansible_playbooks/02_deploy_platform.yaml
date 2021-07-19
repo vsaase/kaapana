@@ -74,7 +74,7 @@
       replace:
         path: "{{ lookup('env','HOME') }}/install_platform.sh"
         regexp: CONTAINER_REGISTRY_URL=""
-        replace: CONTAINER_REGISTRY_URL="{{ gitlab_registry }}"
+        replace: CONTAINER_REGISTRY_URL="{{ registry_url }}"
       delegate_to: 127.0.0.1
     
     - name: Make deployment script executable
@@ -85,7 +85,7 @@
 
     - name: Run platform install script
       become: "{{ 'no' if user == 'root' else 'yes' }}"
-      script: "{{ lookup('env','HOME') }}/install_platform.sh --quiet --username {{ gitlab_username }} --password {{ gitlab_password }}"
+      script: "{{ lookup('env','HOME') }}/install_platform.sh --quiet --username {{ registry_user }} --password {{ registry_pwd }}"
 
     - name: Delete platform installation file from local after installation
       file:
