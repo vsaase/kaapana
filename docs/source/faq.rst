@@ -169,7 +169,7 @@ If the resource is still there delete it with the ``no-hooks`` options:
    helm uninstall --no-hooks <release-name>
 
 
-You forgot your password for the platform
+You forgot the password for accessing the platform
 -----------------------------------------
 
 If you want to change your password or you forgot the password, you can login directly to keycloak. Login with your admin user and change the password of the JIP User:
@@ -178,6 +178,19 @@ In case this fails, you may need to reinstall the platform. Before you do so, ma
 :code:`Helm del <NAME>`
 and to delete the kaapana folder:
 :code:`/home/kaapana`
+
+
+Updating an application fails 
+-----------------------------
+If something fails during the startup of the platform after an application has been updated, the associated application folder needs to be deleted as well. 
+On the server where the platform is running there is a directory :code:`/home/kaapana` in which a folder is created for each application. 
+
+.. figure:: _static/img/folder_structure.png
+   :align: center
+   :scale: 25%
+
+After the update, the respective folder must be deleted. 
+But you have to take care which files are in the folder, they will be deleted as well. Afterwards the platform can be installed again. 
 
 
 
