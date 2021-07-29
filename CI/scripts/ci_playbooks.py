@@ -9,7 +9,7 @@ kaapana_home = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.realpath(__file__))))
 
 
-def start_os_instance(username, password, instance_name="kaapana-deploy-instance", project_name="E230-DKTK-JIP", project_id="969831bf53424f1fb318a9c1d98e1941", os_image="centos7", volume_size="90", instance_flavor="dkfz-8.16", ssh_key="kaapana", test_suite_name="Setup Test Server"):
+def start_os_instance(username, password, instance_name="kaapana-deploy-instance", project_name="E230-DKTK-JIP", project_id="969831bf53424f1fb318a9c1d98e1941", os_image="centos7", volume_size="90", instance_flavor="dkfz-8.16", ssh_key="kaapana", suite_name="Setup Test Server"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/00_start_openstack_instance.yaml")
     if not os.path.isfile(playbook_path):
@@ -29,7 +29,7 @@ def start_os_instance(username, password, instance_name="kaapana-deploy-instance
     }
 
     instance_ip_address, logs = ci_playbook_execute.execute(
-        playbook_path, testsuite=test_suite_name, testname="Start OpenStack instance: {}".format(os_image), hosts=["localhost"], extra_vars=extra_vars)
+        playbook_path, testsuite=suite_name, testname="Start OpenStack instance: {}".format(os_image), hosts=["localhost"], extra_vars=extra_vars)
 
     return instance_ip_address, logs
 
@@ -106,7 +106,7 @@ def delete_platform_deployment(target_hosts, platform_name, suite_name="Test Pla
     return return_value, logs
 
 
-def purge_filesystem(target_hosts, platform_name, uite_name="Test Platform"):
+def purge_filesystem(target_hosts, platform_name, suite_name="Test Platform"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/04_purge_filesystem.yaml")
     if not os.path.isfile(playbook_path):
@@ -139,7 +139,7 @@ def delete_os_instance(username, password, instance_name="kaapana-instance", sui
         "os_instance_name": instance_name
     }
 
-    return_value, logs = ci_playbook_execute.execute(playbook_path, testsuite=suite_name, testname="Delete OpenStack CI instance", hosts=["localhost"], extra_vars=extra_vars)
+    return_value, logs = ci_playbook_execute.execute(playbook_path, testsuite=suite_name, testname="Delete OpenStack instance", hosts=["localhost"], extra_vars=extra_vars)
     return return_value, logs
 
 

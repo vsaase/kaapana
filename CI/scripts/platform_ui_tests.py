@@ -10,15 +10,15 @@ import json
 import os
 
 
-def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser UI Tests"):
+def start(platform_urls, suite_name="UI Tests", test_name="Platform Browser UI Tests"):
     username = "kaapana"
     init_password = "kaapana"
     password = "admin"
 
     for platform_url in platform_urls:
-        test_suite_name = platform_url
+        suite_name = platform_url
         entry = {
-            "suite": test_suite_name,
+            "suite": suite_name,
             "test": test_name,
             "step": "Starting ui tests",
             "log": "",
@@ -36,6 +36,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
         chrome_options.add_argument('--ignore-certificate-errors')
         driver = webdriver.Chrome(options=chrome_options)
         platform_url = "https://{}".format(platform_url)
+        time.sleep(300)
         driver.get(platform_url)
         
         # driver.save_screenshot('/home/jonas/login.png')
@@ -58,7 +59,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
         if retries >= max_retries:
             print("Login failed! -> login-page could not be reached!")
             entry = {
-                "suite": test_suite_name,
+                "suite": suite_name,
                 "test": test_name,
                 "step": "Platform URL check",
                 "log": "",
@@ -70,7 +71,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
             return
 
         entry = {
-            "suite": test_suite_name,
+            "suite": suite_name,
             "test": test_name,
             "step": "Platform URL check",
             "log": "",
@@ -110,7 +111,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
 
             print("Login failed!")
             entry = {
-                "suite": test_suite_name,
+                "suite": suite_name,
                 "test": test_name,
                 "step": "Login",
                 "log": "",
@@ -123,7 +124,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
 
         print("Login ok!")
         entry = {
-            "suite": test_suite_name,
+            "suite": suite_name,
             "test": test_name,
             "step": "Login",
             "log": "",
@@ -156,7 +157,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
                 if url["title"] in driver.title:
                     print("ok")
                     entry = {
-                        "suite": test_suite_name,
+                        "suite": suite_name,
                         "test": test_name,
                         "step": "Testing endpoint",
                         "log": "",
@@ -171,7 +172,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
                     print("WARNING: Could not get: {}".format(url["url"]))
                     if count > 2:
                         entry = {
-                            "suite": test_suite_name,
+                            "suite": suite_name,
                             "test": test_name,
                             "step": "Testing endpoint",
                             "log": "",
@@ -185,7 +186,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
             if count >= 5:
                 print("ERROR while testing: : {}".format(url["title"]))
                 entry = {
-                    "suite": test_suite_name,
+                    "suite": suite_name,
                     "test": test_name,
                     "step": "Testing endpoint",
                     "log": "",
@@ -199,7 +200,7 @@ def start(platform_urls, test_suite_name="UI Tests", test_name="Platform Browser
         driver.quit()
 
         entry = {
-            "suite": test_suite_name,
+            "suite": suite_name,
             "test": test_name,
             "step": "Finish UI tests",
             "log": "",
