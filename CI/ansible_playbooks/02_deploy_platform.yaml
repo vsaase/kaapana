@@ -18,6 +18,7 @@
     user: "{{ remote_username }}"
 
   tasks:
+  ## TODO: For the following, to check if kaapana helm charts installed, if yesm then run install script to uninstall (adapt it from delete deployment playbook)
     # - name: Delete existing Helm deployments
     #   block:
     #     - name: check Helm deployments

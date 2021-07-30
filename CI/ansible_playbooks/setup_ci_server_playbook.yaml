@@ -75,36 +75,54 @@
   vars:
     ansible_ssh_private_key_file: "~/.ssh/jip-ci-kaapana.pem"
     http_proxy: http://www-int2.inet.dkfz-heidelberg.de:80
-    ci_username: "kaapana-ci"
+    os_ci_username: "kaapana-ci"
     
   vars_prompt:
     - name: os_ci_password
       prompt: "CI password?"
       private: yes
+    
+    - name: registry_user
+      prompt: "Registry Token/User Name?"
+    
+    - name: registry_token
+      prompt: "Registry Token?"
+      private: yes
 
   tasks:
     - name: Get password from env...
       set_fact:
-        os_ci_password: "{{ lookup('env','CI_PASSWORD') or ci_password }}"
+        os_ci_password: "{{ lookup('env','CI_PASSWORD') or os_ci_password }}"
       when: os_ci_password | length == 0
-
-    - name: Check Credentials
-      uri:                                        
-        url: "https://dktk-jip-registry.dkfz.de/api/v2.0/projects"    
-        method: GET                               
-        user: "{{ ci_username }}"            
-        password: "{{ os_ci_password }}"    
-        force_basic_auth: yes                    
-        return_content: yes
-        status_code: 200
-      register: registry_projects            
-      ignore_errors: no
-
-    - name: Credentials valid
-      fail: msg="Credentials not valid!"
-      when: registry_projects.json | length == 1
     
-    # not sure why we need the following 2 tasks about ssh keys when we have both OS and CI keys already
+    - name: Get regsitry token/user name from env...
+      set_fact:
+        registry_user: "{{ lookup('env','REGISTRY_USER') or registry_user }}"
+      when: registry_user | length == 0
+    
+    - name: Get regsitry token from env...
+      set_fact:
+        registry_token: "{{ lookup('env','REGISTRY_TOKEN') or registry_token }}"
+      when: registry_token | length == 0
+
+    ## TODO: Following 2 tasks are to check creds on harbor, need to update it to check creds on gitlab
+    # - name: Check Credentials
+    #   uri:                                        
+    #     url: "https://dktk-jip-registry.dkfz.de/api/v2.0/projects"    
+    #     method: GET                               
+    #     user: "{{ os_ci_username }}"            
+    #     password: "{{ os_ci_password }}"    
+    #     force_basic_auth: yes                    
+    #     return_content: yes
+    #     status_code: 200
+    #   register: registry_projects            
+    #   ignore_errors: no
+
+    # - name: Credentials valid
+    #   fail: msg="Credentials not valid!"
+    #   when: registry_projects.json | length == 1
+    
+    ## Not sure why we need following 2 tasks about ssh keys when we have both OS and CI keys already
     # - openssh_keypair:
     #     path: "/home/ubuntu/.ssh/id_rsa"
 
@@ -169,7 +187,7 @@
       lineinfile:
         dest: "{{ ansible_env.HOME }}/.bashrc"
         regexp: "^CI_USERNAME"
-        line: "export CI_USERNAME='{{ ci_username }}'"
+        line: "export CI_USERNAME='{{ os_ci_username }}'"
         state: present
 
     - name: Set CI_PASSWORD
@@ -179,6 +197,22 @@
         state: present
         regexp: "^CI_PASSWORD"
         line: "export CI_PASSWORD='{{ os_ci_password }}'"
+    
+    - name: Set REGISTRY_USER
+      become: no
+      lineinfile:
+        dest: "{{ ansible_env.HOME }}/.bashrc"
+        regexp: "^REGISTRY_USER"
+        line: "export REGISTRY_USER='{{ registry_user }}'"
+        state: present
+    
+    - name: Set REGISTRY_TOKEN
+      become: no
+      lineinfile:
+        dest: "{{ ansible_env.HOME }}/.bashrc"
+        state: present
+        regexp: "^REGISTRY_TOKEN"
+        line: "export REGISTRY_TOKEN='{{ registry_token }}'"
 
     - name: add ci ssh key
       become: no
@@ -284,18 +318,32 @@
         value: "$PATH:{{ ansible_env.HOME }}/.local/bin:/usr/bin:/bin:/snap/bin:/usr/local/bin"
         env: yes
 
-    - name: Create cronjob CI_USERNAME
+    - name: Create cronjob OPENSTACK_CI_USERNAME
       become: no
       cron:
         name: CI_USERNAME
-        value: "{{ ci_username }}"
+        value: "{{ os_ci_username }}"
         env: yes
 
-    - name: Create cronjob CI_PASSWORD
+    - name: Create cronjob OPENSTACK_CI_PASSWORD
       become: no
       cron:
         name: CI_PASSWORD
         value: "{{ os_ci_password }}"
+        env: yes
+
+    - name: Create cronjob REGISTRY_USER
+      become: no
+      cron:
+        name: REGISTRY_USER
+        value: "{{ registry_user }}"
+        env: yes
+    
+    - name: Create cronjob REGISTRY_TOKEN
+      become: no
+      cron:
+        name: REGISTRY_TOKEN
+        value: "{{ registry_token }}"
         env: yes
 
     - name: Create cronjob at 0 docker prune
@@ -320,8 +368,7 @@
         name: "ci reports"
         minute: "0"
         hour: "2"
-        # job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'kaapana CI Nightly' --branch develop -dsm --delete-instances --docs-test --email-notifications --all-platforms 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
-        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'kaapana CI Nightly' -dsm --delete-instances --email-notifications --all-platforms 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
+        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'Kaapana CI Nightly' -rurl 'registry.hzdr.de/kaushal.parekh/ci-dbgtst' -dsm --delete-instances 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
 
     - name: install docker
       import_tasks: task_templates/snap_install_docker.yaml

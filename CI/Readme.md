@@ -12,7 +12,7 @@ To start a new instance of the CI server:
 `ansible-playbook kaapana/CI/ansible_playbooks/setup_ci_server_playbook.yaml`
 
 - Will start a new OpenStack instance with all CI configuration
-- ReportPortal available at http://instance-ip/ui -> default username/pw: default:1q2w3e  and superadmin:erebus
+- ReportPortal available at http://instance-ip/ui -> default username/pw: default:1q2w3e and superadmin:erebus
 - You need to configure a "kaapana" project in report portal + new user
 - Adapt the access-token in `kaapana/CI/scripts/start_ci_pipeline.py` to the new user
 - Cronjob will trigger the pipeline each night at 1 am
@@ -24,7 +24,6 @@ To start a new instance of the CI server:
 ### Delete Docker cache from instance @ 12am
 
 - [x] docker system prune -f -a --volumes
-- [ ]    
 
 ### Start main pipeline @ 2am
 

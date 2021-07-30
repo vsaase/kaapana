@@ -24,7 +24,6 @@ password = None
 gitlab_username = None
 gitlab_password = None
 gitlab_registry = None
-delete_instance = False
 debug_mode = False
 
 def handle_logs(logs):
@@ -144,17 +143,17 @@ if __name__ == '__main__':
     parser.add_argument("-ugl", "--gitlab-username", dest="gitlab_username", default=None, help="GitLab Username")
     parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, required=False, help="GitLab Password")
     parser.add_argument("-rgl", "--gitlab-registry", dest="gitlab_registry", default=None, required=False, help="GitLab Registry Link")
-    parser.add_argument("-di", "--delete-instance", dest="delete_instance", default=None,  action='store_true', help="Delete existing instance first?")
+    parser.add_argument("-di", "--delete-instance", dest="delete_instance", default=False,  action='store_true', help="Delete existing instance first?")
     parser.add_argument("-in", "--instance-name", dest="instance_name", default=None, help="Name for the OpenStack instance?")
     parser.add_argument("-osp", "--os-project-name", dest="os_project_name", default=None, help="Which OpenStack project should be used?")
     parser.add_argument("-osid", "--os-project-id", dest="os_project_id", default=None, help="What is the ID of the OpenStack project?")
     parser.add_argument("-vol", "--volume-size", dest="os_vol_size", default=None, help="OS volume size in GB?")
     parser.add_argument("-fla", "--flavor", dest="os_flavor", default=None, help="OS flavor eg. 'dkfz-8.16' ?")
     parser.add_argument("-key", "--ssh-key", dest="os_ssh_key", default=None, help="Name of the OS ssh-key?")
-    parser.add_argument("-img", "--image", dest="os_image", default=None, help="Which OS image should be used eg '' ?")
+    parser.add_argument("-img", "--image", dest="os_image", default=None, help="Which OS image should be used eg 'ubuntu' ?")
 
     args = parser.parse_args()
-    delete_instance = args.delete_instance if args.delete_instance is not None else delete_instance
+    delete_instance = args.delete_instance
     username = args.username if args.username is not None else username 
     password = args.password if args.password is not None else password
     gitlab_username = args.gitlab_username if args.gitlab_username is not None else gitlab_username 
