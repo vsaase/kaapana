@@ -436,19 +436,19 @@ def build_and_push_charts():
 
             if "platforms" in chart.chart_dir and not chart.local_only:
                 print("saving chart ...")
-                # for log_entry in chart.chart_save():
-                #     yield log_entry
-                #     # print_log_entry(log_entry, kind="CHARTS")
-                #     if log_entry['loglevel'].upper() == "ERROR":
-                #         raise SkipException("SKIP {}: chart_save() error!".format(log_entry['test']), log=log_entry)
+                for log_entry in chart.chart_save():
+                    yield log_entry
+                    # print_log_entry(log_entry, kind="CHARTS")
+                    if log_entry['loglevel'].upper() == "ERROR":
+                        raise SkipException("SKIP {}: chart_save() error!".format(log_entry['test']), log=log_entry)
                     
 
-                # print("pushing chart ...")
-                # for log_entry in chart.chart_push():
-                #     yield log_entry
-                #     # print_log_entry(log_entry, kind="CHARTS")
-                #     if log_entry['loglevel'].upper() == "ERROR":
-                #         raise SkipException("SKIP {}: chart_push() error!".format(log_entry['test']), log=log_entry)
+                print("pushing chart ...")
+                for log_entry in chart.chart_push():
+                    yield log_entry
+                    # print_log_entry(log_entry, kind="CHARTS")
+                    if log_entry['loglevel'].upper() == "ERROR":
+                        raise SkipException("SKIP {}: chart_push() error!".format(log_entry['test']), log=log_entry)
                         
 
             print()
@@ -497,11 +497,11 @@ def build_and_push_containers():
                 if log['loglevel'].upper() == "ERROR":
                     raise SkipException('SKIP {}: build() failed!'.format(log['test']), log=log)
 
-            # for log in docker_container.push():
-            #     # print_log_entry(log, kind="CONTAINERS")
-            #     yield log
-            #     if log['loglevel'].upper() == "ERROR":
-            #         raise SkipException('SKIP {}: push() failed!'.format(log['test']), log=log)
+            for log in docker_container.push():
+                # print_log_entry(log, kind="CONTAINERS")
+                yield log
+                if log['loglevel'].upper() == "ERROR":
+                    raise SkipException('SKIP {}: push() failed!'.format(log['test']), log=log)
 
         except SkipException as error:
             print("SkipException: {}".format(str(error)))
