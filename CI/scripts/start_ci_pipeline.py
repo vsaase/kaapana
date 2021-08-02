@@ -654,8 +654,10 @@ def launch():
 
     # rp_endpoint = "http://10.128.130.67:80"
     # token = "c196043d-1dd7-47d3-b4ff-ad83380e308c"
-    rp_endpoint = "http://10.128.130.238:80"
-    token = "bfeece88-8239-454b-a8ee-cea5fe62e7a6"
+    # rp_endpoint = "http://10.128.130.238:80"
+    # token = "bfeece88-8239-454b-a8ee-cea5fe62e7a6"
+    rp_endpoint = "http://10.128.130.252:80"
+    token = "be220978-8ecf-4829-8a04-3a025a9421ab"
     project = "kaapana"
 
     launch_doc = """
