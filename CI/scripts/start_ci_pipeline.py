@@ -71,7 +71,7 @@ ssh_key = "kaapana"
 registry_user = None
 registry_pwd = None
 registry_url = None
-http_proxy=""
+http_proxy="http://www-int2.dkfz-heidelberg.de:80"
 
 ci_servers = {}
 
@@ -865,6 +865,7 @@ if __name__ == '__main__':
     parser.add_argument("-urg", "--registry-username", dest="registry_user", default=None, help="Registry Username")
     parser.add_argument("-prg", "--registry-password", dest="registry_pwd", default=None, help="Registry Password")
     parser.add_argument("-rurl", "--registry-url", dest="registry_url", default=None, help="Registry Link")
+    parser.add_argument("-px", "--http-proxy", dest="http_proxy", default=None, help="HTTP Proxy")
     parser.add_argument("-di", "--delete-instances", dest="delete_instances", default=False, action='store_true', help="Should a new OS CI instance be created for the tests?")
     parser.add_argument("-en", "--email-notifications", dest="mail_notify", default=False, action='store_true', help="Enable e-mail notifications for errors")
     parser.add_argument("-bo", "--build-only", dest="build_only", default=False, action='store_true', help="No platform deployment and UI tests")
@@ -884,6 +885,7 @@ if __name__ == '__main__':
     registry_user = args.registry_user if args.registry_user is not None else registry_user 
     registry_pwd = args.registry_pwd if args.registry_pwd is not None else registry_pwd
     registry_url = args.registry_url if args.registry_url is not None else registry_url
+    http_proxy = args.http_proxy if args.http_proxy is not None else http_proxy
     launch_name = args.launch_name
     instance_name = args.instance_name
     mail_notification = args.mail_notify
