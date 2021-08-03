@@ -21,9 +21,9 @@ os_project_id = "2df9e30325c849dbadcc07d7ffd4b0d6"
 instance_name = "kaapana-depl-test"
 username = None
 password = None
-gitlab_username = None
-gitlab_password = None
-gitlab_registry = None
+registry_user = None
+registry_pwd = None
+registry_url = None
 debug_mode = False
 
 def handle_logs(logs):
@@ -55,7 +55,7 @@ def install_server_dependencies(target_hosts):
 
 
 def deploy_platform(target_hosts):
-    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, gitlab_username=gitlab_username, gitlab_password=gitlab_password, gitlab_registry=gitlab_registry, platform_name="Kaapana platform")
+    return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, registry_user=registry_user, registry_pwd=registry_pwd, registry_url=registry_url, platform_name="Kaapana platform")
     handle_logs(logs)
 
     return return_value
@@ -96,7 +96,7 @@ def print_success(host):
     return "OK"
 
 def launch():
-    global os_image, volume_size, instance_flavor, ssh_key, os_project_name, instance_name, username, password, gitlab_username, gitlab_password, gitlab_registry
+    global os_image, volume_size, instance_flavor, ssh_key, os_project_name, instance_name, username, password, registry_user, registry_pwd, registry_url
 
     os.chdir(playbook_dir)
     if username is None:
@@ -107,22 +107,22 @@ def launch():
     if password is None:
         password = getpass.getpass("OpenStack password: ")
     
-    if gitlab_username is None:
-        gitlab_username = input("GitLab username:")
+    if registry_user is None:
+        registry_user = input("GitLab username:")
         # TODO: throw error if no input from user
 
-    if gitlab_password is None:
-        gitlab_password = getpass.getpass("GitLab password: ")
+    if registry_pwd is None:
+        registry_pwd = getpass.getpass("GitLab password: ")
 
     if os_project_name is None:
         os_project_template = "E230-DKTK-JIP"
         os_project_name = input("OpenStack project [{}]:".format(os_project_template))
         os_project_name = os_project_template if (os_project_name is None or os_project_name == "") else os_project_name
     
-    if gitlab_registry is None:
-        gitlab_registry_template = "registry.hzdr.de/kaapana/kaapana"
-        gitlab_registry = input("OpenStack project [{}]:".format(gitlab_registry_template))
-        gitlab_registry = gitlab_registry_template if (gitlab_registry is None or gitlab_registry == "") else gitlab_registry
+    if registry_url is None:
+        registry_url_template = "registry.hzdr.de/kaapana/kaapana"
+        registry_url = input("OpenStack project [{}]:".format(registry_url_template))
+        registry_url = registry_url_template if (registry_url is None or registry_url == "") else registry_url
 
     if instance_name is None:
         instance_name_template = "{}-kaapana-instance".format(getpass.getuser())
@@ -140,9 +140,9 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-u", "--username", dest="username", default=None, help="OpenStack Username")
     parser.add_argument("-p", "--password", dest="password", default=None, required=False, help="OpenStack Password")
-    parser.add_argument("-ugl", "--gitlab-username", dest="gitlab_username", default=None, help="GitLab Username")
-    parser.add_argument("-pgl", "--gitlab-password", dest="gitlab_password", default=None, required=False, help="GitLab Password")
-    parser.add_argument("-rgl", "--gitlab-registry", dest="gitlab_registry", default=None, required=False, help="GitLab Registry Link")
+    parser.add_argument("-urg", "--registry-user", dest="registry_user", default=None, help="Registry Username/Acccess token name")
+    parser.add_argument("-prg", "--registry-password", dest="registry_pwd", default=None, required=False, help="Registry Password/Access token")
+    parser.add_argument("-rurl", "--registry-url", dest="registry_url", default=None, required=False, help="Registry Link")
     parser.add_argument("-di", "--delete-instance", dest="delete_instance", default=False,  action='store_true', help="Delete existing instance first?")
     parser.add_argument("-in", "--instance-name", dest="instance_name", default=None, help="Name for the OpenStack instance?")
     parser.add_argument("-osp", "--os-project-name", dest="os_project_name", default=None, help="Which OpenStack project should be used?")
@@ -156,9 +156,9 @@ if __name__ == '__main__':
     delete_instance = args.delete_instance
     username = args.username if args.username is not None else username 
     password = args.password if args.password is not None else password
-    gitlab_username = args.gitlab_username if args.gitlab_username is not None else gitlab_username 
-    gitlab_password = args.gitlab_password if args.gitlab_password is not None else gitlab_password
-    gitlab_registry = args.gitlab_registry if args.gitlab_registry is not None else gitlab_registry
+    registry_user = args.registry_user if args.registry_user is not None else registry_user 
+    registry_pwd = args.registry_pwd if args.registry_pwd is not None else registry_pwd
+    registry_url = args.registry_url if args.registry_url is not None else registry_url
     instance_name = args.instance_name if args.instance_name is not None else instance_name
     volume_size = args.os_vol_size if args.os_vol_size is not None else volume_size
     instance_flavor = args.os_flavor if args.os_flavor is not None else instance_flavor
