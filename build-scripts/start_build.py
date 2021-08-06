@@ -84,7 +84,7 @@ if __name__ == '__main__':
         print("-----------------------------------------------------------")
         exit(1)
 
-    config_filepath = config_filepath if config_filepath is not None else os.path.join(kaapana_dir, "build_scripts", "build-configuration.yaml")
+    config_filepath = config_filepath if config_filepath is not None else os.path.join(kaapana_dir, "build-scripts", "build-configuration.yaml")
     if not os.path.isfile(config_filepath):
         print("The build-configuration.yaml file was not found at: {}".format(config_filepath))
         print("-----------------------------------------------------------")

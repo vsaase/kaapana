@@ -21,12 +21,8 @@ import importlib
 kaapana_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 exceptions_file = os.path.join(kaapana_dir, "CI", "scripts", "ci_exceptions.json")
 ansible_playbook_dir = os.path.join(kaapana_dir, "CI", "ansible_playbooks")
-build_charts_helper_file = os.path.join(kaapana_dir, "build_scripts", "build_helper", "charts_build_and_push_all.py")
-build_containers_helper_file = os.path.join(kaapana_dir, "build_scripts", "build_helper", "containers_build_and_push_all.py")
-
-# sys.path.insert(1, '/home/ubuntu/kaapana/build_scripts/build_helper')
-# from charts_build_and_push_all import HelmChart, init_helm_charts, helm_registry_login
-# from containers_build_and_push_all import start_container_build, container_registry_login
+build_charts_helper_file = os.path.join(kaapana_dir, "build-scripts", "build_helper", "charts_build_and_push_all.py")
+build_containers_helper_file = os.path.join(kaapana_dir, "build-scripts", "build_helper", "containers_build_and_push_all.py")
 
 # Some parameters required for build process
 os.environ["HELM_EXPERIMENTAL_OCI"] = "1"

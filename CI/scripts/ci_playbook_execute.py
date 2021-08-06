@@ -158,7 +158,11 @@ class ResultCallback(CallbackBase):
         error_msg = result._result['msg'].split("\n") if 'msg' in result._result else "N/A"
         return_code = result._result['rc'] if 'rc' in result._result else None
 
-        if return_code == 3 or task == "Check if kubectl is installed" or task == "Check if Snap is installed" or task == "replace ip":
+        if return_code == 3 and task == "Run server dependencies install script on Test":
+            loglevel = "ERROR"
+            global_return_value[host_name] = "FAILED"
+            print("{0: <15} - FAILED: {1}".format(host_name, task))
+        elif return_code == 3 or task == "Check if kubectl is installed" or task == "Check if Snap is installed" or task == "replace ip":
             loglevel = "INFO"
             global_return_value[host_name] = "OK"
             print("{0: <15} - OK: {1}".format(host_name, task))
