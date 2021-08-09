@@ -16,9 +16,10 @@
   remote_user: "{{ remote_username }}"
   vars:
     user: "{{ remote_username }}"
+    script_path: "/home/{{ remote_username }}/install_platform.sh"
 
   tasks:
-  ## TODO: For the following, to check if kaapana helm charts installed, if yesm then run install script to uninstall (adapt it from delete deployment playbook)
+  ## TODO: For the following, to check if kaapana helm charts installed, if yes then run install script to uninstall (adapt it from delete deployment playbook)
     # - name: Delete existing Helm deployments
     #   block:
     #     - name: check Helm deployments
@@ -68,28 +69,28 @@
     - name: Download install_platform.sh file
       get_url: 
         url: https://raw.githubusercontent.com/kaapana/kaapana/develop/platforms/kaapana-platform/platform-installation/install_platform.sh
-        dest: "{{ lookup('env','HOME') }}/install_platform.sh"
+        dest: "{{ script_path }}"
       delegate_to: 127.0.0.1
 
     - name: Add container registry URL to install script
       replace:
-        path: "{{ lookup('env','HOME') }}/install_platform.sh"
+        path: "{{ script_path }}"
         regexp: CONTAINER_REGISTRY_URL=""
         replace: CONTAINER_REGISTRY_URL="{{ registry_url }}"
       delegate_to: 127.0.0.1
     
     - name: Make deployment script executable
       file:
-        path: "{{ lookup('env','HOME') }}/install_platform.sh"
+        path: "{{ script_path }}"
         mode: 0755
       delegate_to: 127.0.0.1
 
     - name: Run platform install script
       become: "{{ 'no' if user == 'root' else 'yes' }}"
-      script: "{{ lookup('env','HOME') }}/install_platform.sh --quiet --username {{ registry_user }} --password {{ registry_pwd }}"
+      script: "{{ script_path }} --quiet --username {{ registry_user }} --password {{ registry_pwd }}"
 
     - name: Delete platform installation file from local after installation
       file:
-        path: "{{ lookup('env','HOME') }}/install_platform.sh"
+        path: "{{ script_path }}"
         state: absent
       delegate_to: 127.0.0.1

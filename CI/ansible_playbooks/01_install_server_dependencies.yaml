@@ -10,16 +10,20 @@
         name: "{{ target }}"
         groups: os_server
 
+
 - name: Install Kaapana server dependencies
   hosts: os_server
   strategy: free
   remote_user: "{{ remote_username }}"
   vars:
     user: "{{ remote_username }}"
+    # script_path: "{{ lookup('env','HOME') }}/server_installation.sh" 
+    script_path: "/home/{{ remote_username }}/server_installation.sh"
 
   tasks:
     - name: Set OpenStack hostname
-      become: "{{ 'no' if user == 'root' else 'yes' }}"
+      # become: "{{ 'no' if user == 'root' else 'yes' }}"
+      become: yes
       hostname:
         name: "vm-{{ inventory_hostname.split('.')[2] }}-{{ inventory_hostname.split('.')[3] }}.cloud.dkfz-heidelberg.de"
       when: inventory_hostname.split('.')[0] == "10"
@@ -27,27 +31,35 @@
     - name: Download server_installation.sh file locally
       get_url: 
         url: https://raw.githubusercontent.com/kaapana/kaapana/develop/server-installation/server_installation.sh
-        dest: "{{ lookup('env','HOME') }}/server_installation.sh" 
+        # dest: "{{ lookup('env','HOME') }}/server_installation.sh" 
+        dest: "{{ script_path }}" 
       delegate_to: 127.0.0.1
 
     - name: Make server installation script executable
       file:
-        path: "{{ lookup('env','HOME') }}/server_installation.sh"
+        # path: "{{ lookup('env','HOME') }}/server_installation.sh"
+        path: "{{ script_path }}"
         mode: 0755
       delegate_to: 127.0.0.1
     
-
+    # - debug: msg="{{ lookup('env','USER','HOME','SHELL', 'CI_USERNAME', 'TERM') }}"
+    
     - name: Run server dependencies install script on server
-      become: "{{ 'no' if user == 'root' else 'yes' }}"
-      script: "{{ lookup('env','HOME') }}/server_installation.sh --quiet"
+      become: yes
+      # script: "{{ lookup('env','HOME') }}/server_installation.sh --quiet"
+      script: "{{ script_path }}  --quiet"
+      # command: /bin/bash /home/ubuntu/server_installation.sh --quiet
+      # shell: 
+      #   chdir: /home/ubuntu/
+      #   cmd: './server_installation.sh --quiet'
 
     - name: Reboot machine...
-      become: "{{ 'no' if user == 'root' else 'yes' }}"
+      become: yes
       reboot:
           reboot_timeout: 120
 
     - name: Delete server installation file from local after installation
       file:
-        path: "{{ lookup('env','HOME') }}/server_installation.sh"
+        path: "{{ script_path }}"
         state: absent
       delegate_to: 127.0.0.1
