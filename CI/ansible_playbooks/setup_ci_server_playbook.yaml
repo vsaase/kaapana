@@ -31,7 +31,7 @@
         username: "kaapana-ci"
         password: "{{ os_ci_password }}"
         user_domain_name: "AD"
-        project_name: "E230-KAAPANA-CI"
+        project_name: "E230-Kaapana-CI"
       name: "{{ instance_name }}"
       key_name: "{{ key_name }}"
       image: "{{ os_image }}"
@@ -238,6 +238,7 @@
         repo: ssh://git@phabricator.mitk.org:2222/source/kaapana.git
         key_file: "{{ ansible_env.HOME }}/.ssh/jip-ci-kaapana.pem"
         dest: "{{ ansible_env.HOME }}/kaapana"
+        ## TODO: change name of the branch to develop when CI code is merged into develop
         version: feature/T28502-kaapana-ci
         accept_hostkey: yes
         force: yes
