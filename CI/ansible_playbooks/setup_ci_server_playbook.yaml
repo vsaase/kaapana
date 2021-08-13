@@ -360,7 +360,7 @@
         name: "ci reports"
         minute: "0"
         hour: "2"
-        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'CI Nightly' -rurl {{ registry_url }} -dsm --delete-instances 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
+        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'CI Nightly' -rurl {{ registry_url }} -dsm --email-notifications --delete-instances 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
 
     - name: install docker
       import_tasks: task_templates/snap_install_docker.yaml
