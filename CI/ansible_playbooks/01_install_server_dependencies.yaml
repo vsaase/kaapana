@@ -30,7 +30,7 @@
     #   delegate_to: 127.0.0.1
 
     - set_fact:
-        server_script: "{{ lookup('env','HOME') }}/server_installation/server_installation.sh"
+        server_script: "{{ lookup('env','HOME') }}/kaapana/server_installation/server_installation.sh"
     
     - name: Run server dependencies install script on server
       become: yes
