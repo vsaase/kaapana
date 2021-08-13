@@ -82,6 +82,10 @@
       prompt: "CI password?"
       private: yes
     
+    - name: registry_url
+      prompt: "Registry URL?"
+      private: no
+    
     - name: registry_user
       prompt: "Registry Token/User Name?"
       private: no
@@ -91,6 +95,11 @@
       private: yes
 
   tasks:
+    - name: Check if Registry URL provided or not
+      fail:
+        msg: Registry URL was not entered, exiting now!!
+      when: registry_url == "" or registry_url == None
+
     - name: Get password from env...
       set_fact:
         os_ci_password: "{{ lookup('env','CI_PASSWORD') or os_ci_password }}"
@@ -105,33 +114,6 @@
       set_fact:
         registry_token: "{{ lookup('env','REGISTRY_TOKEN') or registry_token }}"
       when: registry_token | length == 0
-
-    ## TODO: Following 2 tasks are to check creds on harbor, need to update it to check creds on gitlab
-    # - name: Check Credentials
-    #   uri:                                        
-    #     url: "https://dktk-jip-registry.dkfz.de/api/v2.0/projects"    
-    #     method: GET                               
-    #     user: "{{ os_ci_username }}"            
-    #     password: "{{ os_ci_password }}"    
-    #     force_basic_auth: yes                    
-    #     return_content: yes
-    #     status_code: 200
-    #   register: registry_projects            
-    #   ignore_errors: no
-
-    # - name: Credentials valid
-    #   fail: msg="Credentials not valid!"
-    #   when: registry_projects.json | length == 1
-    
-    ## Not sure why we need following 2 tasks about ssh keys when we have both OS and CI keys already
-    # - openssh_keypair:
-    #     path: "/home/ubuntu/.ssh/id_rsa"
-
-    # - name: Set authorized key took from file
-    #   authorized_key:
-    #     user: ubuntu
-    #     state: present
-    #     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
 
     - name: install proxy
       import_tasks: task_templates/proxy_ubuntu.yaml
@@ -377,7 +359,7 @@
         name: "ci reports"
         minute: "0"
         hour: "2"
-        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'Kaapana CI Nightly' -rurl 'registry.hzdr.de/kaushal.parekh/ci-dbgtst' -dsm --delete-instances 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
+        job: "python3 /home/ubuntu/kaapana/CI/scripts/start_ci_pipeline.py --launch-name 'CI Nightly' -rurl {{ registry_url }} -dsm --delete-instances 2>&1 | tee {{ ansible_env.HOME }}/cronjob.log && echo DONE 2>&1 | tee -a {{ ansible_env.HOME }}/cronjob.log"
 
     - name: install docker
       import_tasks: task_templates/snap_install_docker.yaml
