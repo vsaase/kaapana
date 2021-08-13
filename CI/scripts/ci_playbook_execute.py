@@ -152,6 +152,8 @@ class ResultCallback(CallbackBase):
         task = result._task.get_name()
         ignore_error = result._task_fields['ignore_errors'] if 'ignore_errors' in result._task_fields else False
         changed = result._result['changed'] if 'changed' in result._task_fields else None
+        ## TODO: sometimes, std_out and std_err info is available inside result._result['stdout'] and 
+        # result._result['module_stderr'] respectively. Following could be updated to represent it 
         std_out = result._result['module_stdout'].split("\n") if 'module_stdout' in result._result else "N/A"
         std_err = result._result['module_stderr'].split("\n") if 'module_stderr' in result._result else "N/A"
         exception = result._result['exception'].split("\n") if 'exception' in result._result else "N/A"
