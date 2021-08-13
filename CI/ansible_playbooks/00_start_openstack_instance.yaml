@@ -54,12 +54,12 @@
 
     - name: Set CentOs7 as image
       set_fact:
-        instance_image: CentOS-7.8-DKFZ
+        instance_image: CentOS-7.9-DKFZ
       when: os |lower == "centos7"
 
     - name: Set CentOs8 as image
       set_fact:
-        instance_image: CentOS-8.2-DKFZ
+        instance_image: CentOS-8.3-DKFZ
       when: os |lower == "centos8"
 
     - name: Set Ubuntu as image
