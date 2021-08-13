@@ -28,7 +28,7 @@
     - name: Add container registry URL to install script
       replace:
         path: "{{ install_script }}"
-        regexp: 'CONTAINER_REGISTRY_URL="[a-zA-Z./\-_]*"'
+        regexp: '^CONTAINER_REGISTRY_URL="[a-zA-Z./\-_]*"'
         replace: 'CONTAINER_REGISTRY_URL="{{ registry_url }}"'
       delegate_to: 127.0.0.1
     
