@@ -16,28 +16,22 @@
   remote_user: "{{ remote_username }}"
 
   tasks:
-    - name: Download install_platform.sh file
-      get_url: 
-        url: https://raw.githubusercontent.com/kaapana/kaapana/develop/platforms/kaapana-platform/platform-installation/install_platform.sh
-        dest: "{{ lookup('env','HOME') }}/install_platform.sh"
-      delegate_to: 127.0.0.1
+    # - name: Download install_platform.sh file
+    #   get_url: 
+    #     url: https://raw.githubusercontent.com/kaapana/kaapana/develop/platforms/kaapana-platform/platform-installation/install_platform.sh
+    #     dest: "{{ lookup('env','HOME') }}/install_platform.sh"
+    #   delegate_to: 127.0.0.1
 
     - set_fact:
-        install_script: "{{ lookup('env','HOME') }}/install_platform.sh"
+        install_script: "{{ lookup('env','HOME') }}/kaapana/platforms/kaapana-platform/platform-installation/install_platform.sh"
 
     - name: Add container registry URL to install script
       replace:
         path: "{{ install_script }}"
-        regexp: CONTAINER_REGISTRY_URL=""
-        replace: CONTAINER_REGISTRY_URL="{{ registry_url }}"
+        regexp: 'CONTAINER_REGISTRY_URL="[a-zA-Z./\-_]*"'
+        replace: 'CONTAINER_REGISTRY_URL="{{ registry_url }}"'
       delegate_to: 127.0.0.1
     
     - name: Run platform install script
       become: no
       script: "{{ install_script }} --quiet --username {{ registry_user }} --password {{ registry_pwd }}"
-
-    # - name: Delete platform installation file from local after installation
-    #   file:
-    #     path: "{{ install_script }}"
-    #     state: absent
-    #   delegate_to: 127.0.0.1
