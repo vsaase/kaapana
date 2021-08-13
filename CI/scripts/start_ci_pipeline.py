@@ -31,7 +31,6 @@ log_list = {
     "CHARTS": [],
     "OTHER": []
 }
-# TODO: maybe get rid of the following log level parameters
 supported_log_levels = ["DEBUG", "WARN", "ERROR"]
 log_level = "WARN"
 
