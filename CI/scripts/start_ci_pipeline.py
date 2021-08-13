@@ -56,9 +56,8 @@ mail_counter = 0
 
 username = None
 password = None
-os_image= "ubuntu"
-os_project_name = "E230"
-os_project_id = "1396d67192c24eb7ab606cfae1151208"
+os_project_name = "E230-Kaapana-CI"
+os_project_id = "2df9e30325c849dbadcc07d7ffd4b0d6"
 start_parameters = ""
 
 volume_size = "90"
@@ -409,7 +408,6 @@ def build_and_push_charts():
             print("dep up ...")
             for log_entry in chart.dep_up():
                 yield log_entry
-                # print_log_entry(log_entry, kind="CHARTS")
                 if log_entry['loglevel'].upper() == "ERROR":
                     raise SkipException("SKIP {}: dep_up() error!".format(log_entry['test']), log=log_entry)
                 
@@ -417,7 +415,6 @@ def build_and_push_charts():
             print("linting ...")
             for log_entry in chart.lint_chart():
                 yield log_entry
-                # print_log_entry(log_entry, kind="CHARTS")
                 if log_entry['loglevel'].upper() == "ERROR":
                     raise SkipException("SKIP {}: lint_chart() error!".format(log_entry['test']), log=log_entry)
                 
@@ -425,7 +422,6 @@ def build_and_push_charts():
             print("kubeval ...")
             for log_entry in chart.lint_kubeval():
                 yield log_entry
-                # print_log_entry(log_entry, kind="CHARTS")
                 if log_entry['loglevel'].upper() == "ERROR":
                     raise SkipException("SKIP {}: lint_kubeval() error!".format(log_entry['test']), log=log_entry)
                     
@@ -434,7 +430,6 @@ def build_and_push_charts():
                 print("saving chart ...")
                 for log_entry in chart.chart_save():
                     yield log_entry
-                    # print_log_entry(log_entry, kind="CHARTS")
                     if log_entry['loglevel'].upper() == "ERROR":
                         raise SkipException("SKIP {}: chart_save() error!".format(log_entry['test']), log=log_entry)
                     
@@ -442,7 +437,6 @@ def build_and_push_charts():
                 print("pushing chart ...")
                 for log_entry in chart.chart_push():
                     yield log_entry
-                    # print_log_entry(log_entry, kind="CHARTS")
                     if log_entry['loglevel'].upper() == "ERROR":
                         raise SkipException("SKIP {}: chart_push() error!".format(log_entry['test']), log=log_entry)
                         
@@ -465,7 +459,6 @@ def build_and_push_containers():
 
     for log in logs:
         if supported_log_levels.index(log['loglevel'].upper()) >= log_level:
-            # print_log_entry(log, kind="CONTAINERS")
             handle_logs(log)
         if log['loglevel'].upper() == "ERROR":
             exit(1)
@@ -482,19 +475,16 @@ def build_and_push_containers():
                 print('SKIP {}: CI_IGNORE == True!'.format(docker_container.tag.replace(docker_container.container_registry, "")[1:]))
                 continue
             for log in docker_container.check_prebuild():
-                # print_log_entry(log, kind="CONTAINERS")
                 yield log
                 if log['loglevel'].upper() == "ERROR":
                     raise SkipException('SKIP {}: check_prebuild() failed!'.format(log['test']), log=log)
 
             for log in docker_container.build():
-                # print_log_entry(log, kind="CONTAINERS")
                 yield log
                 if log['loglevel'].upper() == "ERROR":
                     raise SkipException('SKIP {}: build() failed!'.format(log['test']), log=log)
 
             for log in docker_container.push():
-                # print_log_entry(log, kind="CONTAINERS")
                 yield log
                 if log['loglevel'].upper() == "ERROR":
                     raise SkipException('SKIP {}: push() failed!'.format(log['test']), log=log)
@@ -504,7 +494,7 @@ def build_and_push_containers():
             continue
 
 
-def start_os_instance(instance_name, os_image, suite_name="Start Test Server Instance"):
+def start_os_instance(instance_name, os_image, suite_name):
     return_value, logs = ci_playbooks.start_os_instance(username=username,
                                                         password=password,
                                                         instance_name=instance_name,
@@ -521,7 +511,7 @@ def start_os_instance(instance_name, os_image, suite_name="Start Test Server Ins
     return return_value
 
 
-def install_dependencies(target_hosts, os_image="ubuntu", suite_name="Install Server Dependencies"):
+def install_dependencies(target_hosts, os_image, suite_name="Install Server Dependencies"):
     print("target_hosts: {}".format(target_hosts))
     print("suite_name: {}".format(suite_name))
     return_value, logs = ci_playbooks.start_install_server_dependencies(target_hosts=target_hosts, remote_username=os_image, suite_name=suite_name)
@@ -531,7 +521,7 @@ def install_dependencies(target_hosts, os_image="ubuntu", suite_name="Install Se
     return return_value
 
 
-def deploy_platform(target_hosts, platform_name, os_image="ubuntu", suite_name="Deploy Platform"):
+def deploy_platform(target_hosts, platform_name, os_image, suite_name="Deploy Platform"):
     return_value, logs = ci_playbooks.deploy_platform(target_hosts=target_hosts, remote_username=os_image, registry_user=registry_user, registry_pwd=registry_pwd, registry_url=registry_url, platform_name=platform_name)
     for log in logs:
         handle_logs(log)
@@ -546,10 +536,10 @@ def start_ui_tests(target_hosts, platform_name, suite_name="UI Tests"):
     return True
 
 
-def test_platform_version(target_hosts, platform_name):
-    result = deploy_platform(target_hosts=target_hosts, platform_name=platform_name)
+def test_platform(target_hosts, os_image, platform_name="Kaapana"):
+    result = deploy_platform(target_hosts=target_hosts, platform_name=platform_name, os_image=os_image)
     result = start_ui_tests(target_hosts=target_hosts, platform_name=platform_name) if result != "FAILED" else "FAILED"
-    # TODO: The following 2 methods need to be uncommented when CI code is ready
+    ## The following 2 methods aren't currently needed
     # result = remove_platform(target_hosts=target_hosts, platform_name=platform_name) 
     # result = purge_filesystem(target_hosts=target_hosts, platform_name=platform_name) if result != "FAILED" else "FAILED"
 
@@ -589,7 +579,7 @@ def delete_ci_instances(suite_name="Delete CI Instances"):
 
 
 def startup_sequence(os_image, suite_name):
-
+    instance_name = "{}-kaapana-ci-nightly-depl-server".format(os_image).lower()
     recreated = delete_os_instance(
         instance_name=instance_name,
         suite_name=suite_name
@@ -648,10 +638,6 @@ def launch():
         with open(lock_file, 'w') as the_file:
             the_file.write('{}'.format(os.getpid()))
 
-    # rp_endpoint = "http://10.128.130.67:80"
-    # token = "c196043d-1dd7-47d3-b4ff-ad83380e308c"
-    # rp_endpoint = "http://10.128.130.238:80"
-    # token = "bfeece88-8239-454b-a8ee-cea5fe62e7a6"
     rp_endpoint = "http://10.128.130.252:80"
     token = "be220978-8ecf-4829-8a04-3a025a9421ab"
     project = "kaapana"
@@ -702,8 +688,6 @@ def launch():
                 print("DONE.")
                 exit(0)
 
-        running_processes = []
-        # os.chdir(ansible_playbook_dir)
         if not build_only:
             suite_name = "Startup Sequence"
             log = {
@@ -711,11 +695,9 @@ def launch():
                 "step": "started"
             }
             handle_logs(log)
-
-            if docs_test:
-                startup_sequence("centos7")
-
-            # startup_sequence("centos8")
+            
+            startup_sequence("centos7", suite_name)
+            startup_sequence("centos8", suite_name)
             startup_sequence("ubuntu", suite_name)
 
             log = {
@@ -724,91 +706,51 @@ def launch():
             }
             handle_logs(log)
 
-            # running_processes = []
-            # if "centos7" in ci_servers and docs_test:
-            #     suite_name = ci_servers["centos7"]["ip"]
-            #     log = {
-            #         "suite": suite_name,
-            #         "step": "started"
-            #     }
-            #     handle_logs(log)
-
-            #     result = install_dependencies(
-            #         target_hosts=[ci_servers["centos7"]["ip"]],
-            #         docs_test=True,
-            #         suite_name=suite_name
-            #     )
-
-            #     platform_name = "JIP Release Docs Test"
-
-            #     result = deploy_platform(
-            #         target_hosts=[ci_servers["centos7"]["ip"]],
-            #         platform_name=platform_name,
-            #         docs_test=True,
-            #         config_file="jip_release.yaml"
-            #     ) if "centos7" in ci_servers else "FAILED"
-
-            #     result = start_ui_tests(
-            #         target_hosts=[ci_servers["centos7"]["ip"]],
-            #         suite_name=suite_name,
-            #         platform_name=platform_name
-            #     ) if result != "FAILED" else "FAILED"
-
-            #     result = purge_filesystem(
-            #         target_hosts=[ci_servers["centos7"]["ip"]],
-            #         config_file="jip_release.yaml",
-            #         platform_name=platform_name,
-            #         suite_name=suite_name
-            #     ) if result != "FAILED" else "FAILED"
-
-            #     log = {
-            #         "suite": ci_servers["centos7"]["ip"],
-            #         "suite_done": True
-            #     }
-            #     handle_logs(log)
-
-            host_ips = []
+            centos_host_ips = []
+            ubuntu_host_ips = []
             for key, val in ci_servers.items():
-                if key != "centos7":
-                    host_ips.append(val["ip"])
-                    suite_name = val["ip"]
-                    log = {
-                        "suite": suite_name,
-                        "step": "started"
-                    }
-                    handle_logs(log)
+                suite_name = val["ip"]
+                log = {
+                    "suite": suite_name,
+                    "step": "started"
+                }
+                handle_logs(log)
+                if key == "centos7" or key == "centos8":                
+                    centos_host_ips.append(val["ip"])
+                elif key == "ubuntu":
+                    ubuntu_host_ips.append(val["ip"])
+                else:
+                    print("Skipping host with currently unsupported Operating System -> {}")
 
-            if len(host_ips) > 0:
-                result = install_dependencies(target_hosts=host_ips)
+            if len(centos_host_ips) == 0 and len(ubuntu_host_ips) == 0:
+                print("No HOSTS found, terminating...")
+                terminate_session(1,ci_status="FAILED")
+                exit(1)
             else:
-                print("No HOSTS found...")
-                result = "FAILED"
+                if len(centos_host_ips) > 0:
+                    centos_result = install_dependencies(target_hosts=centos_host_ips, os_image="centos")
+                    centos_result = test_platform(target_hosts=centos_host_ips, os_image="centos") if centos_result != "FAILED" else "FAILED"
+                if len(ubuntu_host_ips) > 0:
+                    ubuntu_result = install_dependencies(target_hosts=ubuntu_host_ips, os_image="ubuntu")
+                    ubuntu_result = test_platform(target_hosts=ubuntu_host_ips, os_image="ubuntu") if ubuntu_result != "FAILED" else "FAILED"
 
-            if result == "FAILED":
-                print("Error installing install_dependencies...")
+            if centos_result == "FAILED":
+                print("Error in CentOS deployment and test...")
+            if ubuntu_result == "FAILED":
+                print("Error in Ubuntu deployment and test...")
+            if centos_result == "FAILED" and ubuntu_result == "FAILED":
+                print("Deployment and test for all supported Operating Systems failed, terminating...")
                 terminate_session(1,ci_status="FAILED")
                 exit(1)
 
-            result = test_platform_version(
-                target_hosts=host_ips,
-                platform_name="Kaapana"
-            )
-
-            if all_platforms:
-                result = test_platform_version(
-                    target_hosts=host_ips,
-                    config_file="kaapana_platform.yaml",
-                    platform_name="kaapana Platform"
-                )
-
-            for ip in host_ips:
+            for key, val in ci_servers.items():
                 log = {
-                    "suite": ip,
+                    "suite": val["ip"],
                     "suite_done": True
                 }
                 handle_logs(log)
 
-            print("Platform deloyment tests done.")
+            print("Platform deloyment tests done!")
         else:
             print("BUILD ONLY -> Skipping deployment tests....")
             print("DONE")
@@ -852,8 +794,8 @@ if __name__ == '__main__':
         start_parameters = "None"
 
     parser = ArgumentParser()
-    parser.add_argument("-in", "--inst-name", dest="instance_name", default="kaapana-ci-nightly-depl-test", help="Name for the CI deployment instance")
-    parser.add_argument("-ln", "--launch-name", dest="launch_name", default="Kaapana CI Nightly Run", help="Name for the lauch on ReportPortal")
+    parser.add_argument("-in", "--inst-name", dest="instance_name", default="ci-nightly-depl-test", help="Name for the CI deployment instance")
+    parser.add_argument("-ln", "--launch-name", dest="launch_name", default="CI Nightly Run", help="Name for the lauch on ReportPortal")
     parser.add_argument("-b", "--branch", dest="branch", default=None, help="Branch to run the CI on. !!CAUTION: will reset the git repo to last commit!")
     parser.add_argument("-dsm", "--disable-safe-mode", dest="disable_safe_mode", default=False, action='store_true',help="Disable safe-mode")
     parser.add_argument("-u", "--username", dest="username", default="kaapana-ci", help="Openstack Username")
@@ -926,7 +868,7 @@ if __name__ == '__main__':
 
     branch_name = repo.active_branch.name
     
-    # # TODO: following is just temp, needs to be removed
+    ## TODO: following is just for debugging CI, needs to be removed
     lock_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))))), "ci_running.txt")
     if os.path.isfile(lock_file):

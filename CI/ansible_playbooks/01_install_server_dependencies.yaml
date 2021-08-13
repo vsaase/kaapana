@@ -15,14 +15,9 @@
   hosts: os_server
   strategy: free
   remote_user: "{{ remote_username }}"
-  vars:
-    user: "{{ remote_username }}"
-    # script_path: "{{ lookup('env','HOME') }}/server_installation.sh" 
-    script_path: "/home/{{ remote_username }}/server_installation.sh"
 
   tasks:
     - name: Set OpenStack hostname
-      # become: "{{ 'no' if user == 'root' else 'yes' }}"
       become: yes
       hostname:
         name: "vm-{{ inventory_hostname.split('.')[2] }}-{{ inventory_hostname.split('.')[3] }}.cloud.dkfz-heidelberg.de"
@@ -31,35 +26,23 @@
     - name: Download server_installation.sh file locally
       get_url: 
         url: https://raw.githubusercontent.com/kaapana/kaapana/develop/server-installation/server_installation.sh
-        # dest: "{{ lookup('env','HOME') }}/server_installation.sh" 
-        dest: "{{ script_path }}" 
+        dest: "{{ lookup('env','HOME') }}/server_installation.sh" 
       delegate_to: 127.0.0.1
 
-    - name: Make server installation script executable
-      file:
-        # path: "{{ lookup('env','HOME') }}/server_installation.sh"
-        path: "{{ script_path }}"
-        mode: 0755
-      delegate_to: 127.0.0.1
-    
-    # - debug: msg="{{ lookup('env','USER','HOME','SHELL', 'CI_USERNAME', 'TERM') }}"
+    - set_fact:
+        server_script: "{{ lookup('env','HOME') }}/server_installation.sh"
     
     - name: Run server dependencies install script on server
       become: yes
-      # script: "{{ lookup('env','HOME') }}/server_installation.sh --quiet"
-      script: "{{ script_path }}  --quiet"
-      # command: /bin/bash /home/ubuntu/server_installation.sh --quiet
-      # shell: 
-      #   chdir: /home/ubuntu/
-      #   cmd: './server_installation.sh --quiet'
+      script: "{{ server_script }}  --quiet"
 
     - name: Reboot machine...
       become: yes
       reboot:
           reboot_timeout: 120
 
-    - name: Delete server installation file from local after installation
-      file:
-        path: "{{ script_path }}"
-        state: absent
-      delegate_to: 127.0.0.1
+    # - name: Delete server installation file from local after installation
+    #   file:
+    #     path: "{{ server_script }}"
+    #     state: absent
+    #   delegate_to: 127.0.0.1

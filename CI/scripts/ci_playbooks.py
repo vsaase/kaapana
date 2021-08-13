@@ -9,7 +9,7 @@ kaapana_home = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.realpath(__file__))))
 
 
-def start_os_instance(username, password, instance_name="kaapana-deploy-instance", project_name="E230-DKTK-JIP", project_id="969831bf53424f1fb318a9c1d98e1941", os_image="centos7", volume_size="90", instance_flavor="dkfz-8.16", ssh_key="kaapana", suite_name="Setup Test Server"):
+def start_os_instance(username, password, project_name, project_id, instance_name="kaapana-deploy-instance", os_image="ubuntu", volume_size="90", instance_flavor="dkfz-8.16", ssh_key="kaapana", suite_name="Setup Test Server"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/00_start_openstack_instance.yaml")
     if not os.path.isfile(playbook_path):
@@ -34,28 +34,6 @@ def start_os_instance(username, password, instance_name="kaapana-deploy-instance
     return instance_ip_address, logs
 
 
-def start_install_server_dependencies_centos(target_hosts, ssh_key=str(Path.home())+"/.ssh/kaapana.pem", test_suite_name="Setup Test Server", docs_test=False):
-    if not os.path.isfile(ssh_key):
-        print("SSH-key could not be found! {}".format(ssh_key))
-        return "FAILED", []
-
-    playbook_path = os.path.join(
-        kaapana_home, "CI/ansible_playbooks/02_install_server_dependencies_centos.yaml")
-    if not os.path.isfile(playbook_path):
-        print("playbook yaml not found.")
-        exit(1)
-
-    extra_vars = {
-        "KAAPANA_HOME": kaapana_home,
-        # "ansible_ssh_private_key_file": ssh_key,
-        "doc_install_test": "true" if docs_test else "false"
-    }
-
-    return_value, logs = ci_playbook_execute.execute(
-        playbook_path, testsuite=test_suite_name, testname="Install Server Dependencies", hosts=target_hosts, extra_vars=extra_vars)
-    return return_value, logs
-
-
 def start_install_server_dependencies(target_hosts, remote_username, suite_name="Setup Test Server"):
     playbook_path = os.path.join(kaapana_home, "CI/ansible_playbooks/01_install_server_dependencies.yaml")
     if not os.path.isfile(playbook_path):
@@ -70,7 +48,7 @@ def start_install_server_dependencies(target_hosts, remote_username, suite_name=
     return return_value, logs
 
 
-def deploy_platform(target_hosts, remote_username, registry_user, registry_pwd, registry_url, platform_name, suite_name="Test Platform"):
+def deploy_platform(target_hosts, remote_username, registry_user, registry_pwd, registry_url, platform_name="Kaapana", suite_name="Test Platform"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/02_deploy_platform.yaml")
     if not os.path.isfile(playbook_path):
@@ -106,7 +84,7 @@ def delete_platform_deployment(target_hosts, platform_name, suite_name="Test Pla
     return return_value, logs
 
 
-def purge_filesystem(target_hosts, platform_name, suite_name="Test Platform"):
+def purge_filesystem(target_hosts, platform_name="Kaapana", suite_name="Test Platform"):
     playbook_path = os.path.join(
         kaapana_home, "CI/ansible_playbooks/04_purge_filesystem.yaml")
     if not os.path.isfile(playbook_path):
@@ -123,7 +101,7 @@ def purge_filesystem(target_hosts, platform_name, suite_name="Test Platform"):
     return return_value, logs
 
 
-def delete_os_instance(username, password, instance_name="kaapana-instance", suite_name="Setup Test Server", os_project_name="E230-DKTK-JIP", os_project_id="969831bf53424f1fb318a9c1d98e1941"):
+def delete_os_instance(username, password, os_project_name, os_project_id, instance_name="kaapana-instance", suite_name="Setup Test Server"):
     playbook_path = os.path.join(
     kaapana_home, "CI/ansible_playbooks/05_delete_os_instance.yaml")
 

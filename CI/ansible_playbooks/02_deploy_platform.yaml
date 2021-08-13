@@ -14,83 +14,30 @@
   hosts: os_server
   strategy: free
   remote_user: "{{ remote_username }}"
-  vars:
-    user: "{{ remote_username }}"
-    script_path: "/home/{{ remote_username }}/install_platform.sh"
 
   tasks:
-  ## TODO: For the following, to check if kaapana helm charts installed, if yes then run install script to uninstall (adapt it from delete deployment playbook)
-    # - name: Delete existing Helm deployments
-    #   block:
-    #     - name: check Helm deployments
-    #       command: helm ls
-    #       register: deployments
-
-    #     # - name: print deployments
-    #     #   debug:
-    #     #     msg: "{{ deployments.stdout }}"
-
-    #     - name: LIST HELM DEPLOYMENTS
-    #       debug:
-    #         msg: "DEPLOYED: {{ item.split('\t')[0] }}"
-    #       with_items: "{{ deployments.stdout.split('\n')[1:] }}"
-
-    #     - name: Delete existing deployments
-    #       command: "helm del {{ item.split('\t')[0] }}"
-    #       with_items: "{{ deployments.stdout.split('\n')[1:] }}"
-
-    #     - name: Wait until namespaces are removed
-    #       shell: /bin/bash -i -c "kubectl get namespaces | grep -E --line-buffered 'flow-jobs|flow|base|monitoring|store' | cut -d' ' -f1"
-    #       register: deployment_removed
-    #       until: deployment_removed.stdout == '' and deployment_removed.stderr == ''
-    #       failed_when: deployment_removed.stdout != '' and deployment_removed.stderr != ''
-    #       retries: 50
-    #       delay: 3
-
-    #     - name: Wait until all pods are terminated
-    #       shell: /bin/bash -i -c "kubectl get pods --all-namespaces | grep -E --line-buffered 'Terminating' | cut -d' ' -f1"
-    #       register: deployment_terminated
-    #       until: deployment_terminated.stdout == '' and deployment_terminated.stderr == ''
-    #       failed_when: deployment_terminated.stdout != '' and deployment_terminated.stderr != ''
-    #       retries: 50
-    #       delay: 3
-
-    #   rescue:
-    #     - name: Get all remaining pods
-    #       shell: /bin/bash -i -c "kubectl get pods --all-namespaces"
-    #       register: pods_left
-    #     - debug:
-    #         msg: "Existing deployments: {{ deployments.stdout }}"
-    #     - debug:
-    #         msg: "Remaining pods: {{ pods_left.stdout }}"
-    #     - fail:
-    #         msg: "Removing existing deployments failed!"
-
     - name: Download install_platform.sh file
       get_url: 
         url: https://raw.githubusercontent.com/kaapana/kaapana/develop/platforms/kaapana-platform/platform-installation/install_platform.sh
-        dest: "{{ script_path }}"
+        dest: "{{ lookup('env','HOME') }}/install_platform.sh"
       delegate_to: 127.0.0.1
+
+    - set_fact:
+        install_script: "{{ lookup('env','HOME') }}/install_platform.sh"
 
     - name: Add container registry URL to install script
       replace:
-        path: "{{ script_path }}"
+        path: "{{ install_script }}"
         regexp: CONTAINER_REGISTRY_URL=""
         replace: CONTAINER_REGISTRY_URL="{{ registry_url }}"
       delegate_to: 127.0.0.1
     
-    - name: Make deployment script executable
-      file:
-        path: "{{ script_path }}"
-        mode: 0755
-      delegate_to: 127.0.0.1
-
     - name: Run platform install script
-      become: "{{ 'no' if user == 'root' else 'yes' }}"
-      script: "{{ script_path }} --quiet --username {{ registry_user }} --password {{ registry_pwd }}"
+      become: no
+      script: "{{ install_script }} --quiet --username {{ registry_user }} --password {{ registry_pwd }}"
 
-    - name: Delete platform installation file from local after installation
-      file:
-        path: "{{ script_path }}"
-        state: absent
-      delegate_to: 127.0.0.1
+    # - name: Delete platform installation file from local after installation
+    #   file:
+    #     path: "{{ install_script }}"
+    #     state: absent
+    #   delegate_to: 127.0.0.1
