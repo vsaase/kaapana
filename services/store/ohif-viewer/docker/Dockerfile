@@ -19,6 +19,8 @@ ENV PUBLIC_URL "/ohif/"
 ENV APP_CONFIG "config/kaapana.js"
 
 RUN yarn install
+# Adapated by Kaapana basically reversing this change: https://github.com/OHIF/Viewers/issues/2345#issuecomment-821910646
+RUN yarn add --peer -W dcmjs@0.18.4
 RUN yarn run build
 
 FROM nginx:stable-alpine as production-stage
