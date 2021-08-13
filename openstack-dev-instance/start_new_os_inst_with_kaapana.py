@@ -100,7 +100,7 @@ def launch():
 
     os.chdir(playbook_dir)
     if username is None:
-        username_template = "jip-ci-kaapana"
+        username_template = "kaapana-ci"
         username = input("OpenStack username [{}]:".format(username_template))
         username = username_template if (username is None or username == "") else username
 
