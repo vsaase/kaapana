@@ -2,9 +2,9 @@
 
 ## CI Dashboard
 
-- Go to [ReportPortal](http://10.128.130.67/ui/#kaapana/launches/all)
-- User: user
-- Password: user
+- Go to [ReportPortal](http://10.128.130.252/ui/#kaapana/launches/all)
+- User: kaapana
+- Password: q1w2e3r4
 - -> Launches
 
 ## Init new CI server
