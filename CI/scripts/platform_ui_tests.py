@@ -15,6 +15,7 @@ def start(platform_urls, suite_name="UI Tests", test_name="Platform Browser UI T
     init_password = "kaapana"
     password = "admin"
 
+    time.sleep(300)
     for platform_url in platform_urls:
         suite_name = platform_url
         entry = {
@@ -36,7 +37,6 @@ def start(platform_urls, suite_name="UI Tests", test_name="Platform Browser UI T
         chrome_options.add_argument('--ignore-certificate-errors')
         driver = webdriver.Chrome(options=chrome_options)
         platform_url = "https://{}".format(platform_url)
-        time.sleep(300)
         driver.get(platform_url)
         
         # driver.save_screenshot('/home/jonas/login.png')
