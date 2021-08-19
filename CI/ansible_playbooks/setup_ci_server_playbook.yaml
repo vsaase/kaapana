@@ -260,7 +260,7 @@
         value: jip-ci-kaapana@dkfz-heidelberg.de
       become: no
 
-    - name: configure ssh to use ansible key for Phabricator
+    - name: Start HTTP CI Server
       become: yes
       template:
         src: file_templates/ci_server_service
