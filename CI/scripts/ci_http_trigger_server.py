@@ -166,8 +166,8 @@ class S(BaseHTTPRequestHandler):
                     print("starting ci for: {}".format(branch))
                     self.wfile.write("Triggered!".encode('utf-8'))
 
-                    # ci_paras.append("--branch")
-                    # ci_paras.append("{}".format(branch))
+                    ci_paras.append("--branch")
+                    ci_paras.append("{}".format(branch))
                     ci_paras.append("--disable-safe-mode")
                     start_ci_pipeline_file = os.path.join(git_dir, "CI", "scripts", "start_ci_pipeline.py")
                     p = subprocess.Popen(["/usr/bin/python3", start_ci_pipeline_file, *ci_paras])
