@@ -82,24 +82,46 @@ class S(BaseHTTPRequestHandler):
                     ci_paras.append("--delete-instances")
                     del parameters["delete-instances"]
 
+                if "os-usr" in parameters:
+                    ci_paras.append("--username")
+                    ci_paras.append(f"{parameters['os-usr'][0]}")
+                    del parameters["os-usr"]
+                else:
+                    self.wfile.write("CI pipeline can't be triggered without openstack user <br />".encode('utf-8'))
+                
+                if "os-pwd" in parameters:
+                    ci_paras.append("--password")
+                    ci_paras.append(f"{parameters['os-pwd'][0]}")
+                    del parameters["os-pwd"]
+                else:
+                    self.wfile.write("CI pipeline can't be triggered without openstack password <br />".encode('utf-8'))
+
                 if "reg-url" in parameters:
-                    ci_paras.append("-rurl {}".format(parameters['reg-url'][0]))
+                    ci_paras.append("--registry-url")
+                    ci_paras.append(f"{parameters['reg-url'][0]}")
                     del parameters["reg-url"]
                 else:
                     self.wfile.write("CI pipeline can't be triggered without registry URL <br />".encode('utf-8'))
                 
                 if "reg-usr" in parameters:
-                    ci_paras.append("-urg {}".format(parameters['reg-usr'][0]))
+                    ci_paras.append("--registry-username")
+                    ci_paras.append(f"{parameters['reg-usr'][0]}")
                     del parameters["reg-usr"]
                 else:
-                    self.wfile.write("CI pipeline can't be triggered without registry user <br />".encode('utf-8'))
+                    self.wfile.write("CI pipeline can't be triggered without registry username <br />".encode('utf-8'))
                 
                 if "reg-pwd" in parameters:
-                    ci_paras.append("-prg {}".format(parameters['reg-pwd'][0]))
+                    ci_paras.append("--registry-password")
+                    ci_paras.append(f"{parameters['reg-pwd'][0]}")
                     del parameters["reg-pwd"]
                     self.wfile.write("ci_paras {} found. <br />".format(ci_paras).encode('utf-8'))
                 else:
-                    self.wfile.write("CI pipeline can't be triggered without registry passowrd/token <br />".encode('utf-8'))
+                    self.wfile.write("CI pipeline can't be triggered without registry password/token <br />".encode('utf-8'))
+                
+                if "launch-name" in parameters:
+                    ci_paras.append("--launch-name")
+                    ci_paras.append(f"{parameters['launch-name'][0]}")
+                    del parameters["launch-name"]
                 
                 if "email-notifications" in parameters:
                     ci_paras.append("--email-notifications")
@@ -109,9 +131,9 @@ class S(BaseHTTPRequestHandler):
                     ci_paras.append("--charts-only")
                     del parameters["charts-only"]
 
-                if "docker-only" in parameters:
-                    ci_paras.append("--docker-only")
-                    del parameters["docker-only"]
+                if "container-only" in parameters:
+                    ci_paras.append("--container-only")
+                    del parameters["container-only"]
 
                 if "build-only" in parameters:
                     ci_paras.append("--build-only")
@@ -120,7 +142,11 @@ class S(BaseHTTPRequestHandler):
                 if "deployment-only" in parameters:
                     ci_paras.append("--deployment-only")
                     del parameters["deployment-only"]
-
+                
+                if "disable-report" in parameters:
+                    ci_paras.append("--disable-report")
+                    del parameters["disable-report"]
+    
                 if len(parameters) > 0:
                     self.wfile.write("Unsupported parameters: {}".format(
                         list(parameters.keys())).encode('utf-8'))
@@ -140,8 +166,8 @@ class S(BaseHTTPRequestHandler):
                     print("starting ci for: {}".format(branch))
                     self.wfile.write("Triggered!".encode('utf-8'))
 
-                    ci_paras.append("--branch")
-                    ci_paras.append("{}".format(branch))
+                    # ci_paras.append("--branch")
+                    # ci_paras.append("{}".format(branch))
                     ci_paras.append("--disable-safe-mode")
                     start_ci_pipeline_file = os.path.join(git_dir, "CI", "scripts", "start_ci_pipeline.py")
                     p = subprocess.Popen(["/usr/bin/python3", start_ci_pipeline_file, *ci_paras])
@@ -185,13 +211,17 @@ class S(BaseHTTPRequestHandler):
                                             <div><strong>where para could be:</strong></div>
                                             <br />
                                             <div>&nbsp; &nbsp; delete-instances&nbsp; &nbsp; &nbsp; &nbsp;-&gt; start from scratch and delete OS ci instances first</div>
-                                            <div>&nbsp; &nbsp; reg-url&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enter container registry url "reg-url=&lturl_link&gt"</div>
-                                            <div>&nbsp; &nbsp; reg-usr&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enter container registry user "reg-usr=&ltreg_user&gt"</div>
+                                            <div>&nbsp; &nbsp; os-usr&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; OpenStack CI user "os-usr=&ltos-ci-user&gt"</div>
+                                            <div>&nbsp; &nbsp; os-pwd&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; OpenStack CI password "os-pwd=&ltos-ci-password/token&gt"</div>
+                                            <div>&nbsp; &nbsp; reg-url&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; container registry url "reg-url=&lturl_link&gt"</div>
+                                            <div>&nbsp; &nbsp; reg-usr&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; container registry user "reg-usr=&ltreg_user&gt"</div>
                                             <div>&nbsp; &nbsp; reg-pwd&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enter container registry token/password "reg-pwd=&ltreg-password/token&gt"</div>
+                                            <div>&nbsp; &nbsp; launch-name&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; CI job launch name, appears on CI dashboard</div>
                                             <div>&nbsp; &nbsp; build-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; check, build and push Helm charts Docker containers only</div>
                                             <div>&nbsp; &nbsp; charts-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; check, build and push Helm charts only</div>
                                             <div>&nbsp; &nbsp; docker-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; check, build and push Docker containers only</div>
                                             <div>&nbsp; &nbsp; deployment-only&nbsp; &nbsp; &nbsp;-&gt; platform deployment tests only</div>
+                                            <div>&nbsp; &nbsp; disable-report&nbsp; &nbsp;-&gt; disable reporting on CI dashboard</div>
                                             <div>&nbsp; &nbsp; email-notifications&nbsp; &nbsp;-&gt; enable email-notifications for errors</div>
                                             <br />
                                             <div><strong>example:</strong></div>
