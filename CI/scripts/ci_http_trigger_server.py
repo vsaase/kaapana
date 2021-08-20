@@ -30,6 +30,8 @@ class S(BaseHTTPRequestHandler):
         parameters = urllib.parse.parse_qs(
             urllib_path.query, keep_blank_values=True)
 
+        # self.wfile.write("Parameters {} found. <br />".format(parameters).encode('utf-8'))
+
         print("###################################################  IN GET: {}".format(
             urllib_path.path))
         if "/favicon.ico" in self.path:
@@ -80,6 +82,25 @@ class S(BaseHTTPRequestHandler):
                     ci_paras.append("--delete-instances")
                     del parameters["delete-instances"]
 
+                if "reg-url" in parameters:
+                    ci_paras.append("-rurl {}".format(parameters['reg-url'][0]))
+                    del parameters["reg-url"]
+                else:
+                    self.wfile.write("CI pipeline can't be triggered without registry URL <br />".encode('utf-8'))
+                
+                if "reg-usr" in parameters:
+                    ci_paras.append("-urg {}".format(parameters['reg-usr'][0]))
+                    del parameters["reg-usr"]
+                else:
+                    self.wfile.write("CI pipeline can't be triggered without registry user <br />".encode('utf-8'))
+                
+                if "reg-pwd" in parameters:
+                    ci_paras.append("-prg {}".format(parameters['reg-pwd'][0]))
+                    del parameters["reg-pwd"]
+                    self.wfile.write("ci_paras {} found. <br />".format(ci_paras).encode('utf-8'))
+                else:
+                    self.wfile.write("CI pipeline can't be triggered without registry passowrd/token <br />".encode('utf-8'))
+                
                 if "email-notifications" in parameters:
                     ci_paras.append("--email-notifications")
                     del parameters["email-notifications"]
@@ -99,14 +120,6 @@ class S(BaseHTTPRequestHandler):
                 if "deployment-only" in parameters:
                     ci_paras.append("--deployment-only")
                     del parameters["deployment-only"]
-
-                if "all-platforms" in parameters:
-                    ci_paras.append("--all-platforms")
-                    del parameters["all-platforms"]
-
-                if "docs-test" in parameters:
-                    ci_paras.append("--docs-test")
-                    del parameters["docs-test"]
 
                 if len(parameters) > 0:
                     self.wfile.write("Unsupported parameters: {}".format(
@@ -164,18 +177,21 @@ class S(BaseHTTPRequestHandler):
                                             <div>
                                             <h1><strong>Branch {} not found!</strong></h1>
                                             <br />
+                                            <h1><strong>CI Parameters passed are {}</strong></h1>
+                                            <br />
                                             <h2>Usage:</h2>
                                             <h2>/cikaapana/&lt;branch&gt;?para1&amp;para2</h2>
                                             <br />
                                             <div><strong>where para could be:</strong></div>
                                             <br />
-                                            <div>&nbsp; &nbsp; delete-instances&nbsp; &nbsp; &nbsp;-&gt; start from scratch and delete OS ci instances first</div>
+                                            <div>&nbsp; &nbsp; delete-instances&nbsp; &nbsp; &nbsp; &nbsp;-&gt; start from scratch and delete OS ci instances first</div>
+                                            <div>&nbsp; &nbsp; reg-url&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enter container registry url "reg-url=&lturl_link&gt"</div>
+                                            <div>&nbsp; &nbsp; reg-usr&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enter container registry user "reg-usr=&ltreg_user&gt"</div>
+                                            <div>&nbsp; &nbsp; reg-pwd&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enter container registry token/password "reg-pwd=&ltreg-password/token&gt"</div>
                                             <div>&nbsp; &nbsp; build-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; check, build and push Helm charts Docker containers only</div>
                                             <div>&nbsp; &nbsp; charts-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; check, build and push Helm charts only</div>
                                             <div>&nbsp; &nbsp; docker-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; check, build and push Docker containers only</div>
                                             <div>&nbsp; &nbsp; deployment-only&nbsp; &nbsp; &nbsp;-&gt; platform deployment tests only</div>
-                                            <div>&nbsp; &nbsp; docs-test&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; enable installation test from the online documentation</div>
-                                            <div>&nbsp; &nbsp; all-platforms&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; enable deployment tests for all defined platforms (e.g. kaapana-platform)</div>
                                             <div>&nbsp; &nbsp; email-notifications&nbsp; &nbsp;-&gt; enable email-notifications for errors</div>
                                             <br />
                                             <div><strong>example:</strong></div>
@@ -192,7 +208,7 @@ class S(BaseHTTPRequestHandler):
                     </body>
                     </html>
 
-                    """.format(branch).encode('utf-8'))
+                    """.format(branch, ci_paras).encode('utf-8'))
 
         else:
             self.wfile.write("Nothing to do...".encode('utf-8'))
