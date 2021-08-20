@@ -139,9 +139,9 @@ class S(BaseHTTPRequestHandler):
                     ci_paras.append("--build-only")
                     del parameters["build-only"]
 
-                if "deployment-only" in parameters:
+                if "deploy-only" in parameters:
                     ci_paras.append("--deployment-only")
-                    del parameters["deployment-only"]
+                    del parameters["deploy-only"]
                 
                 if "disable-report" in parameters:
                     ci_paras.append("--disable-report")
@@ -220,7 +220,7 @@ class S(BaseHTTPRequestHandler):
                                             <div>&nbsp; &nbsp; build-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; check, build and push Helm charts Docker containers only</div>
                                             <div>&nbsp; &nbsp; charts-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; check, build and push Helm charts only</div>
                                             <div>&nbsp; &nbsp; docker-only&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-&gt; check, build and push Docker containers only</div>
-                                            <div>&nbsp; &nbsp; deployment-only&nbsp; &nbsp; &nbsp;-&gt; platform deployment tests only</div>
+                                            <div>&nbsp; &nbsp; deploy-only&nbsp; &nbsp; &nbsp;-&gt; platform deployment tests only</div>
                                             <div>&nbsp; &nbsp; disable-report&nbsp; &nbsp;-&gt; disable reporting on CI dashboard</div>
                                             <div>&nbsp; &nbsp; email-notifications&nbsp; &nbsp;-&gt; enable email-notifications for errors</div>
                                             <br />
