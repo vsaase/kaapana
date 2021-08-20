@@ -34,4 +34,6 @@
     
     - name: Run platform install script
       become: no
+      environment:
+        TERM: xterm
       script: "{{ install_script }} --quiet --username {{ registry_user }} --password {{ registry_pwd }}"

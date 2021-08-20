@@ -34,6 +34,8 @@
     
     - name: Run server dependencies install script on server
       become: yes
+      environment:
+        TERM: xterm
       script: "{{ server_script }}  --quiet"
 
     - name: Reboot machine...
