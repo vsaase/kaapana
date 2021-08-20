@@ -87,14 +87,14 @@ class S(BaseHTTPRequestHandler):
                     ci_paras.append(f"{parameters['os-usr'][0]}")
                     del parameters["os-usr"]
                 else:
-                    self.wfile.write("CI pipeline can't be triggered without openstack user <br />".encode('utf-8'))
+                    self.wfile.write("CI pipeline can't work without openstack user <br />".encode('utf-8'))
                 
                 if "os-pwd" in parameters:
                     ci_paras.append("--password")
                     ci_paras.append(f"{parameters['os-pwd'][0]}")
                     del parameters["os-pwd"]
                 else:
-                    self.wfile.write("CI pipeline can't be triggered without openstack password <br />".encode('utf-8'))
+                    self.wfile.write("CI deployment can't work without openstack password <br />".encode('utf-8'))
 
                 if "reg-url" in parameters:
                     ci_paras.append("--registry-url")
