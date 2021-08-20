@@ -114,7 +114,7 @@ class S(BaseHTTPRequestHandler):
                     ci_paras.append("--registry-password")
                     ci_paras.append(f"{parameters['reg-pwd'][0]}")
                     del parameters["reg-pwd"]
-                    self.wfile.write("ci_paras {} found. <br />".format(ci_paras).encode('utf-8'))
+                    # self.wfile.write("ci_paras {} found. <br />".format(ci_paras).encode('utf-8'))
                 else:
                     self.wfile.write("CI pipeline can't be triggered without registry password/token <br />".encode('utf-8'))
                 
